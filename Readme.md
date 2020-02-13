@@ -38,7 +38,7 @@ RGRGRG...
 ```
 
 ### Benchmark
-Performance comparison a 5 megapixel [test image](etc/test.bmp).
+Performance comparison using a 5 megapixel [test image](etc/test.bmp).
 
 Method | Device | Elapsed | Mode |
 |:----:|:------:|:-------:|:----:|
