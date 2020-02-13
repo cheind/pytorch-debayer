@@ -129,3 +129,42 @@ class Debayer2x2(torch.nn.Module):
         x = torch.nn.functional.conv2d(x, self.kernels, stride=2)
         x = torch.nn.functional.interpolate(x, scale_factor=2, mode='bilinear', align_corners=False)
         return x
+
+class DebayerSplit(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.pad = torch.nn.ReflectionPad2d(1)
+        self.kernel = torch.nn.Parameter(
+            torch.tensor([
+                [0,1,0],
+                [1,0,1],
+                [0,1,0]
+            ])[None, None] * 0.25)
+
+    def forward(self, x):
+        '''Debayer image.
+
+        Parameters
+        ----------
+        x : Bx1xHxW tensor
+            Images to debayer
+
+        Returns
+        -------
+        rgb : Bx3xHxW tensor
+            Color images in RGB channel order.
+        '''
+        B,_,H,W = x.shape
+        red = x[:, :, ::2, ::2]
+        blue = x[:, :, 1::2, 1::2]
+
+        green = torch.nn.functional.conv2d(self.pad(x), self.kernel)
+        green[:, :, ::2, 1::2] = x[:, :, ::2, 1::2]
+        green[:, :, 1::2, ::2] = x[:, :, 1::2, ::2]
+
+        return torch.cat((
+            torch.nn.functional.interpolate(red, size=(H, W)),
+            green,
+            torch.nn.functional.interpolate(blue, size=(H, W))),
+            dim=1)
