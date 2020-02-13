@@ -82,7 +82,7 @@ class Debayer2x2(torch.nn.Module):
     to OpenCV naming conventions.        
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         super(Debayer2x2, self).__init__()
 
         self.kernels = torch.nn.Parameter(
