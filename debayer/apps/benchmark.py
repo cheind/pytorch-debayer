@@ -108,7 +108,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dev', default='cuda')
     parser.add_argument('--batch', default=10, type=int)
-    parser.add_argument('--no-time-upload', dest='time_upload', action='store_false', default=True)
+    parser.add_argument('--time-upload', action='store_true')
     parser.add_argument('image')
     args = parser.parse_args()
 
