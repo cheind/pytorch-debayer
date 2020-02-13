@@ -23,6 +23,11 @@ rgb = f(bayer)  # a Bx3xHxW, torch.float32 tensor of RGB images
 
 see [this example](debayer/apps/example.py) for elaborate code.
 
+### Install
+```
+pip install git+https://github.com/cheind/pytorch-debayer
+```
+
 ### Limitations
 
 Currently **pytorch-debayer** requires BG-Bayer color filter array layout. According to OpenCV naming conventions (see [here](https://docs.opencv.org/4.2.0/de/d25/imgproc_color_conversions.html) towards end of file) that means your Bayer input image must be arranged in the following way
