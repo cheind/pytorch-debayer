@@ -42,6 +42,8 @@ Performance comparison a 5 megapixel [test image](etc/test.bmp).
 
 Method | Device | Elapsed | Mode |
 |:----:|:------:|:-------:|:----:|
+| Debayer2x2 | GeForce RTX 2080 SUPER | 0.52 msec/image | time_upload=False,batch_size=10 |
+| Debayer3x3 | GeForce RTX 2080 SUPER | 2.16 msec/image | time_upload=False,batch_size=10 |
 | Debayer2x2 | GeForce GTX 1080 Ti | 0.70 msec/image | time_upload=False,batch_size=10 |
 | Debayer3x3 | GeForce GTX 1080 Ti | 2.77 msec/image | time_upload=False,batch_size=10 |
 | OpenCV 4.1.2 | CPU ?? | 2.92 msec/image | transparent_api=False |
