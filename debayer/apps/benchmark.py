@@ -57,6 +57,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dev', default='cuda')
     parser.add_argument('--batch', default=10, type=int)
+    parser.add_argument('--time-upload', action='store_true')
     parser.add_argument('image')
     args = parser.parse_args()
 
@@ -78,11 +79,7 @@ def main():
     deb = deb.to(args.dev)
     debname = deb.__class__.__name__
     
-    mode = dict(time_upload=True, batch_size=args.batch)
-    e = run_pytorch(deb, t, args.dev, **mode)
-    print(fmt_line(debname, devname, e, **mode))
-
-    mode = dict(time_upload=False, batch_size=args.batch)
+    mode = dict(time_upload=args.time_upload, batch_size=args.batch)
     e = run_pytorch(deb, t, args.dev, **mode)
     print(fmt_line(debname, devname, e, **mode))
 
@@ -90,7 +87,7 @@ def main():
     deb = debayer.Debayer3x3().to(args.dev)
     deb = deb.to(args.dev)
     debname = deb.__class__.__name__
-    mode = dict(time_upload=False, batch_size=args.batch)
+    mode = dict(time_upload=args.time_upload, batch_size=args.batch)
     e = run_pytorch(deb, t, args.dev, **mode)
     print(fmt_line(debname, devname, e, **mode))
 

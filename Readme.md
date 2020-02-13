@@ -37,12 +37,10 @@ Performance comparison a 5 megapixel [test image](etc/test.bmp).
 
 Method | Device | Elapsed | Mode |
 |:----:|:------:|:-------:|:----:|
-| Debayer2x2 | GeForce GTX 1080 Ti | 2.29 msec/image | time_upload=True,batch_size=10 |
-| Debayer2x2 | GeForce GTX 1080 Ti | 0.69 msec/image | time_upload=False,batch_size=10 |
-| Debayer2x2 | GeForce GTX 1070 | 1.2 msec | time_upload=False,batch_size=10 |
-| Debayer3x3 | GeForce GTX 1080 Ti | 2.79 msec/image | time_upload=False,batch_size=10 |
-| OpenCV 4.1.2 | CPU i7-8700K | 2.94 msec/image | transparent_api=False |
-| OpenCV 4.1.2 | GPU GeForce GTX 1080 Ti | 0.83 msec/image | transparent_api=True |
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.70 msec/image | time_upload=False,batch_size=10 |
+| Debayer3x3 | GeForce GTX 1080 Ti | 2.77 msec/image | time_upload=False,batch_size=10 |
+| OpenCV 4.1.2 | CPU ?? | 2.92 msec/image | transparent_api=False |
+| OpenCV 4.1.2 | GPU ?? | 0.89 msec/image | transparent_api=True |
 
 Stats computed by [benchmark code](debayer/apps/benchmark.py). Invoke with
 
