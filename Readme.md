@@ -6,6 +6,8 @@ Currently, two modules based on bilinear interpolation are provided
  - `debayer.Debayer2x2` uses 2x2 convolutions. Trades speed for color accuracy.
  - `debayer.Debayer3x3` uses 3x3 convolutions. Slower but reconstruction results comparable with `OpenCV.cvtColor`.
 
+This library is most useful when downstream image processing happens with PyTorch models. Additionally the upload of Bayer images reduces the occupied bandwidth compared to color images.
+
 ### Usage
 Usage is straight forward
 
