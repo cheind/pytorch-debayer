@@ -164,7 +164,7 @@ class DebayerSplit(torch.nn.Module):
         green[:, :, 1::2, ::2] = x[:, :, 1::2, ::2]
 
         return torch.cat((
-            torch.nn.functional.interpolate(red, size=(H, W)),
+            torch.nn.functional.interpolate(red, size=(H, W), mode='bilinear', align_corners=False),
             green,
-            torch.nn.functional.interpolate(blue, size=(H, W))),
+            torch.nn.functional.interpolate(blue, size=(H, W), mode='bilinear', align_corners=False)),
             dim=1)
