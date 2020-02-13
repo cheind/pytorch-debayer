@@ -68,8 +68,6 @@ class Debayer3x3(torch.nn.Module):
             ]).view(1,3,2,2), requires_grad=False
         )
         
-
-    @torch.no_grad()
     def forward(self, x):
         '''Debayer image.
 
@@ -114,7 +112,6 @@ class Debayer2x2(torch.nn.Module):
             ]).view(3,1,2,2), requires_grad=False
         )
 
-    @torch.no_grad()
     def forward(self, x):
         '''Debayer image.
 

@@ -17,8 +17,9 @@ from debayer import Debayer3x3
 
 f = Debayer3x3().cuda()
 
-bayer = ...     # a Bx1xHxW, torch.float32 tensor of BG-Bayer images
-rgb = f(bayer)  # a Bx3xHxW, torch.float32 tensor of RGB images
+bayer = ...         # a Bx1xHxW, torch.float32 tensor of BG-Bayer images
+with torch.no_grad():
+    rgb = f(bayer)  # a Bx3xHxW, torch.float32 tensor of RGB images
 ```
 
 see [this example](debayer/apps/example.py) for elaborate code.

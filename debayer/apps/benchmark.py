@@ -72,6 +72,7 @@ def fmt_line(method, devname, elapsed, **modeargs):
     mode = ','.join([f'{k}={v}' for k,v in modeargs.items()])
     return f'| {method} | {devname} | {elapsed:4.2f} msec/image | {mode} |'
 
+@torch.no_grad()
 def bench_debayer(b, args):
     devname = torch.cuda.get_device_name(args.dev)
     mode = dict(time_upload=args.time_upload, batch_size=args.batch)
