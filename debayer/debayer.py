@@ -8,20 +8,10 @@ class Debayer3x3(torch.nn.Module):
     Requires BG-Bayer color filter array layout. That is,
     the image[1,1]='B', image[1,2]='G'. This corresponds
     to OpenCV naming conventions.
-    
-    Kwargs
-    ------
-    shape : tuple (optional)
-        height and width of image. If omitted, shape is derived
-        from actual image. When image size does not change, setting
-        shape increases performance.
     '''
 
-    def __init__(self, shape=None):
+    def __init__(self):
         super(Debayer3x3, self).__init__()
-
-        if shape is None:
-            shape=(2,2)
 
         self.kernels = torch.nn.Parameter(
             torch.tensor([
@@ -59,7 +49,7 @@ class Debayer3x3(torch.nn.Module):
                 # dest channel b
                 [2, 4], # pixel is R,G1
                 [3, 0], # pixel is G2,B
-            ]).view(1,3,2,2).repeat(1,1,shape[0]//2,shape[1]//2), requires_grad=False
+            ]).view(1,3,2,2), requires_grad=False
         )
         
 
@@ -77,13 +67,11 @@ class Debayer3x3(torch.nn.Module):
         rgb : Bx3xHxW tensor
             Color images in RGB channel order.
         '''
+        B,C,H,W = x.shape
 
         x = torch.nn.functional.pad(x, (1,1,1,1), mode='replicate')
         c = torch.nn.functional.conv2d(x, self.kernels, stride=1)
-        idx = self.index
-        if idx.shape[-2:] != c.shape[-2:]:
-            idx = idx.repeat(1,1,c.shape[-2]//2,c.shape[-1]//2)
-        rgb = torch.gather(c, 1, idx)
+        rgb = torch.gather(c, 1, self.index.repeat(B,1,H//2,W//2))
         return rgb
 
 class Debayer2x2(torch.nn.Module):
