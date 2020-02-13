@@ -6,7 +6,11 @@ import timeit
 
 import debayer
 
-def run_pytorch(deb, t, dev, time_upload=False):
+def run_pytorch(deb, t, dev, **kwargs):
+    time_upload = kwargs.get('time_upload', False)
+    B = kwargs.get('batch_size', 10)
+
+    t = t.repeat(B,1,1,1)
     t = t.pin_memory() if time_upload else t.to(dev)
 
     def run_once():
@@ -29,10 +33,12 @@ def run_pytorch(deb, t, dev, time_upload=False):
     end.record()
     torch.cuda.synchronize()
 
-    return start.elapsed_time(end)/N 
+    return start.elapsed_time(end)/(N*B)
 
-def run_opencv(b, transparent_api=False):
+def run_opencv(b, **kwargs):
     # see https://www.learnopencv.com/opencv-transparent-api/
+    transparent_api = kwargs.get('transparent_api', False)
+
     b = cv2.UMat(b) if transparent_api else b
     def run_cv_once():
         x = cv2.cvtColor(b, cv2.COLOR_BAYER_BG2RGB)
@@ -43,8 +49,9 @@ def run_opencv(b, transparent_api=False):
 
     return timeit.timeit(run_cv_once, number=20)/20*1000
 
-def fmt_line(method, devname, elapsed, mode):
-    return f'| {method} | {devname} | {elapsed:4.2f} msec | {mode} |'
+def fmt_line(method, devname, elapsed, **modeargs):
+    mode = ','.join([f'{k}={v}' for k,v in modeargs.items()])
+    return f'| {method} | {devname} | {elapsed:4.2f} msec/image | {mode} |'
 
 def main():
     parser = argparse.ArgumentParser()
@@ -69,22 +76,29 @@ def main():
     deb = debayer.Debayer2x2().to(args.dev)
     deb = deb.to(args.dev)
     debname = deb.__class__.__name__
-    e = run_pytorch(deb, t, args.dev, time_upload=True)
-    print(fmt_line(debname, devname, e, 'time_upload=True'))
-    e = run_pytorch(deb, t, args.dev, time_upload=False)
-    print(fmt_line(debname, devname, e, 'time_upload=False'))
+    
+    mode = dict(time_upload=True, batch_size=10)
+    e = run_pytorch(deb, t, args.dev, **mode)
+    print(fmt_line(debname, devname, e, **mode))
+
+    mode = dict(time_upload=False, batch_size=10)
+    e = run_pytorch(deb, t, args.dev, **mode)
+    print(fmt_line(debname, devname, e, **mode))
 
     
     deb = debayer.Debayer3x3().to(args.dev)
     deb = deb.to(args.dev)
     debname = deb.__class__.__name__
-    e = run_pytorch(deb, t, args.dev, time_upload=False)
-    print(fmt_line(debname, devname, e, 'time_upload=False'))
+    mode = dict(time_upload=False, batch_size=10)
+    e = run_pytorch(deb, t, args.dev, **mode)
+    print(fmt_line(debname, devname, e, **mode))
 
-    e = run_opencv(b, transparent_api=False)
-    print(fmt_line(f'OpenCV {cv2.__version__}', 'CPU ??', e, 'transparent_api=False'))
+    mode = dict(transparent_api=False)
+    e = run_opencv(b, **mode)
+    print(fmt_line(f'OpenCV {cv2.__version__}', 'CPU ??', e, **mode))
+    mode = dict(transparent_api=True)
     e = run_opencv(b, transparent_api=True)
-    print(fmt_line(f'OpenCV {cv2.__version__}', 'CPU ??', e, 'transparent_api=True'))
+    print(fmt_line(f'OpenCV {cv2.__version__}', 'GPU ??', e, **mode))
 
 
 if __name__ == '__main__':
