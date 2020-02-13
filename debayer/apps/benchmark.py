@@ -1,7 +1,6 @@
 import cv2
 import torch
 import argparse
-import pandas as pd
 import timeit
 
 import debayer
