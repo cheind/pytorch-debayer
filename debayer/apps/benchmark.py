@@ -79,7 +79,6 @@ def bench_debayer(b, args):
 
     t = (
         torch.from_numpy(b)
-        .to(torch.float32)    
         .unsqueeze(0)
         .unsqueeze(0)        
     ) / 255.0
