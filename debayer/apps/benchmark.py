@@ -1,7 +1,15 @@
-import cv2
 import torch
+import numpy as np
 import argparse
-import timeit
+import time
+from PIL import Image
+
+try:
+    import cv2
+    OPENCV_AVAILABLE = True
+except ImportError:
+    print('Skipping OpenCV, not installed.')
+    OPENCV_AVAILABLE = False
 
 import debayer
 
@@ -26,7 +34,7 @@ def run_pytorch(deb, t, dev, **kwargs):
     end = torch.cuda.Event(enable_timing=True)
 
     start.record()
-    N = 100
+    N = 1000
     for _ in range(N):
         run_once()
     end.record()
@@ -36,31 +44,37 @@ def run_pytorch(deb, t, dev, **kwargs):
 
 def run_opencv(b, **kwargs):
     # see https://www.learnopencv.com/opencv-transparent-api/
+    time_upload = kwargs.get('time_upload', False)
     transparent_api = kwargs.get('transparent_api', False)
+    B = kwargs.get('batch_size', 10)
+    
+    b = cv2.UMat(b) if (transparent_api and not time_upload) else b
+    def run_once():
+        x = cv2.UMat(b) if (transparent_api and time_upload) else b
+        y = cv2.cvtColor(x, cv2.COLOR_BAYER_BG2RGB)
+        return y
 
-    b = cv2.UMat(b) if transparent_api else b
-    def run_cv_once():
-        x = cv2.cvtColor(b, cv2.COLOR_BAYER_BG2RGB)
+    run_once()
+    run_once()
+    y = run_once()
+    if transparent_api:
+        z = y.get()
 
-    run_cv_once()
-    run_cv_once()
-    run_cv_once()
-
-    return timeit.timeit(run_cv_once, number=20)/20*1000
+    N = 1000*B
+    start = time.time()
+    for _ in range(N):
+        y = run_once()        
+    if transparent_api:
+        z = y.get()
+    return (time.time() - start)/N*1000
 
 def fmt_line(method, devname, elapsed, **modeargs):
     mode = ','.join([f'{k}={v}' for k,v in modeargs.items()])
     return f'| {method} | {devname} | {elapsed:4.2f} msec/image | {mode} |'
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dev', default='cuda')
-    parser.add_argument('--batch', default=10, type=int)
-    parser.add_argument('--time-upload', action='store_true')
-    parser.add_argument('image')
-    args = parser.parse_args()
-
-    b = cv2.imread(args.image, cv2.IMREAD_GRAYSCALE)
+def bench_debayer(b, args):
+    devname = torch.cuda.get_device_name(args.dev)
+    mode = dict(time_upload=args.time_upload, batch_size=args.batch)
 
     t = (
         torch.from_numpy(b)
@@ -69,34 +83,46 @@ def main():
         .unsqueeze(0)        
     ) / 255.0
 
-    devname = torch.cuda.get_device_name(args.dev)
-
-    print('Method | Device | Elapsed | Mode |')
-    print('|:----:|:------:|:-------:|:----:|')
-        
     deb = debayer.Debayer2x2().to(args.dev)
     deb = deb.to(args.dev)
-    debname = deb.__class__.__name__
-    
-    mode = dict(time_upload=args.time_upload, batch_size=args.batch)
+    debname = deb.__class__.__name__        
     e = run_pytorch(deb, t, args.dev, **mode)
     print(fmt_line(debname, devname, e, **mode))
-
     
     deb = debayer.Debayer3x3().to(args.dev)
     deb = deb.to(args.dev)
     debname = deb.__class__.__name__
-    mode = dict(time_upload=args.time_upload, batch_size=args.batch)
     e = run_pytorch(deb, t, args.dev, **mode)
     print(fmt_line(debname, devname, e, **mode))
 
-    mode = dict(transparent_api=False)
+def bench_opencv(b, args):
+    mode = dict(transparent_api=False, time_upload=args.time_upload, batch_size=args.batch)
     e = run_opencv(b, **mode)
     print(fmt_line(f'OpenCV {cv2.__version__}', 'CPU ??', e, **mode))
-    mode = dict(transparent_api=True)
-    e = run_opencv(b, transparent_api=True)
+    mode = dict(transparent_api=True, time_upload=args.time_upload, batch_size=args.batch)
+    e = run_opencv(b, **mode)
     print(fmt_line(f'OpenCV {cv2.__version__}', 'GPU ??', e, **mode))
 
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dev', default='cuda')
+    parser.add_argument('--batch', default=10, type=int)
+    parser.add_argument('--no-time-upload', dest='time_upload', action='store_false', default=True)
+    parser.add_argument('image')
+    args = parser.parse_args()
+
+    b = np.asarray(Image.open(args.image).convert('L'))
+    
+
+    print(f'running pytorch-debayer: {debayer.__version__}')
+    print()
+    print('Method | Device | Elapsed | Mode |')
+    print('|:----:|:------:|:-------:|:----:|')
+
+    bench_debayer(b, args)
+    if OPENCV_AVAILABLE:
+        bench_opencv(b, args)
 
 if __name__ == '__main__':
     main()
