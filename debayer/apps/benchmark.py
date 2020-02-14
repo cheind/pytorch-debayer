@@ -95,6 +95,12 @@ def bench_debayer(b, args):
     e = run_pytorch(deb, t, args.dev, **mode)
     print(fmt_line(debname, devname, e, **mode))
 
+    deb = debayer.DebayerSplit().to(args.dev)
+    deb = deb.to(args.dev)
+    debname = deb.__class__.__name__
+    e = run_pytorch(deb, t, args.dev, **mode)
+    print(fmt_line(debname, devname, e, **mode))
+
 def bench_opencv(b, args):
     mode = dict(transparent_api=False, time_upload=args.time_upload, batch_size=args.batch)
     e = run_opencv(b, **mode)
