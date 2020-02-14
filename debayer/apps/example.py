@@ -9,7 +9,7 @@ import debayer
 @torch.no_grad()
 def main():    
     parser = argparse.ArgumentParser()
-    parser.add_argument('--conv', type=int, default=3, help='Debayer algorithm to use (2,3,4).')
+    parser.add_argument('--method', default='Debayer3x3', help='Debayer algorithm to use (2,3,4).')
     parser.add_argument('--dev', default='cuda')
     parser.add_argument('image')
     args = parser.parse_args()
@@ -19,10 +19,10 @@ def main():
 
     # Init filter
     deb = {
-        2: debayer.Debayer2x2,
-        3: debayer.Debayer3x3,
-        4: debayer.DebayerSplit
-    }[args.conv]()
+        'Debayer2x2': debayer.Debayer2x2,
+        'Debayer3x3': debayer.Debayer3x3,
+        'DebayerSplit': debayer.DebayerSplit
+    }[args.method]()
     deb = deb.to(args.dev)
 
     # Prepare input with shape Bx1xHxW and 
