@@ -70,7 +70,7 @@ def run_opencv(b, **kwargs):
 
 def fmt_line(method, devname, elapsed, **modeargs):
     mode = ','.join([f'{k}={v}' for k,v in modeargs.items()])
-    return f'| {method} | {devname} | {elapsed:4.2f} msec/image | {mode} |'
+    return f'| {method} | {devname} | {elapsed:4.2f} | {mode} |'
 
 @torch.no_grad()
 def bench_debayer(b, args):
@@ -123,7 +123,7 @@ def main():
 
     print(f'running pytorch-debayer: {debayer.__version__}')
     print()
-    print('Method | Device | Elapsed | Mode |')
+    print('Method | Device | Elapsed [msec/image] | Mode |')
     print('|:----:|:------:|:-------:|:----:|')
 
     bench_debayer(b, args)
