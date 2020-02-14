@@ -131,6 +131,12 @@ class Debayer2x2(torch.nn.Module):
         return x
 
 class DebayerSplit(torch.nn.Module):
+    '''Demosaicing of Bayer images using 3x3 green convolution and red,blue upsampling.
+    
+    Requires BG-Bayer color filter array layout. That is,
+    the image[1,1]='B', image[1,2]='G'. This corresponds
+    to OpenCV naming conventions.
+    '''
     def __init__(self):
         super().__init__()
 
