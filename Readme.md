@@ -71,17 +71,17 @@ Stats computed by [benchmark code](debayer/apps/benchmark.py). Invoke with
 
 Here are some subjective image demosaicing results using the following [test image](etc/test.bmp) image.
 <div align="center">
-<img width="20%" src="etc/comparison/input.png" />
+<img width="40%" src="etc/comparison/input.png" />
 </div>
 
 <div align="center">
-<img width="60%" src="etc/comparison/01.png" />
+<img width="100%" src="etc/comparison/01.png" />
 </div>
 
 <div align="center">
-<img width="60%" src="etc/comparison/03.png" />
+<img width="100%" src="etc/comparison/03.png" />
 </div>
 
 <div align="center">
-<img width="60%" src="etc/comparison/04.png" />
+<img width="100%" src="etc/comparison/04.png" />
 </div>
