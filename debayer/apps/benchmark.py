@@ -86,25 +86,21 @@ def bench_debayer(b, args):
     t = (torch.tensor(b).clone().unsqueeze(0).unsqueeze(0)) / 255.0
 
     deb = debayer.Debayer2x2().to(args.dev)
-    deb = deb.to(args.dev)
     debname = deb.__class__.__name__
     e = run_pytorch(deb, t, args.dev, **mode)
     print(fmt_line(debname, devname, e, **mode))
 
     deb = debayer.Debayer3x3().to(args.dev)
-    deb = deb.to(args.dev)
     debname = deb.__class__.__name__
     e = run_pytorch(deb, t, args.dev, **mode)
     print(fmt_line(debname, devname, e, **mode))
 
     deb = debayer.Debayer5x5().to(args.dev)
-    deb = deb.to(args.dev)
     debname = deb.__class__.__name__
     e = run_pytorch(deb, t, args.dev, **mode)
     print(fmt_line(debname, devname, e, **mode))
 
     deb = debayer.DebayerSplit().to(args.dev)
-    deb = deb.to(args.dev)
     debname = deb.__class__.__name__
     e = run_pytorch(deb, t, args.dev, **mode)
     print(fmt_line(debname, devname, e, **mode))
