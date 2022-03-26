@@ -69,19 +69,36 @@ Stats computed by [benchmark code](debayer/apps/benchmark.py). Invoke with
 
 ### Comparisons
 
-Here are some subjective image demosaicing results using the following [test image](etc/test.bmp) image.
+Here are some subjective image demosaicing results using the following [test image](etc/test.bmp) image. 
 <div align="center">
-<img width="40%" src="etc/comparison/input.png" />
+<img width="60%" src="etc/readme/input.png" />
+</div>
+
+The following highlights algorithmic differences on various smaller regions for improved pixel visibility. From left to right 
+```
+OpenCV, Debayer2x2, Debayer3x3, DebayerSplit, Debayer5x5
+```
+
+Click images to enlarge.
+
+<div align="center">
+<img width="100%" src="etc/readme/test-mosaic-l1429-r1659-b1889-t1725.png" />
 </div>
 
 <div align="center">
-<img width="100%" src="etc/comparison/01.png" />
+<img width="100%" src="etc/readme/test-mosaic-l1779-r1998-b1145-t949.png" />
 </div>
 
 <div align="center">
-<img width="100%" src="etc/comparison/03.png" />
+<img width="100%" src="etc/readme/test-mosaic-l620-r872-b1430-t1233.png" />
 </div>
 
 <div align="center">
-<img width="100%" src="etc/comparison/04.png" />
+<img width="100%" src="etc/readme/test-mosaic-l588-r817-b1178-t981.png" />
 </div>
+
+Created using
+```
+python -m debayer.apps.compare etc\test.bmp
+# Then select a region and check `tmp`/
+```
