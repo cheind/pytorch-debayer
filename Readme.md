@@ -8,6 +8,8 @@ Currently, three modules based on bilinear interpolation are provided
  - `debayer.Debayer5x5` uses 5x5 convolutions based on Malver-He-Cutler algorithm. Slower but sharper than `OpenCV.cvtColor`.
  - `debayer.DebayerSplit` faster than Debayer3x3 but decreased image quality.
 
+As of `v1.0.2` the method `debayer.Debayer5x5` should be used per default.
+
 This library is most useful when downstream image processing happens with PyTorch models. Additionally the upload of Bayer images reduces the occupied bandwidth compared to color images.
 
 ### Usage
@@ -64,3 +66,22 @@ Stats computed by [benchmark code](debayer/apps/benchmark.py). Invoke with
 ```
 > python -m debayer.apps.benchmark etc\test.bmp
 ```
+
+### Comparisons
+
+Here are some subjective image demosaicing results using the following [test image](etc/test.bmp) image.
+<div align="center">
+<img width="20%" src="etc/comparison/input.png" />
+</div>
+
+<div align="center">
+<img width="60%" src="etc/comparison/01.png" />
+</div>
+
+<div align="center">
+<img width="60%" src="etc/comparison/03.png" />
+</div>
+
+<div align="center">
+<img width="60%" src="etc/comparison/04.png" />
+</div>
