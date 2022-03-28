@@ -2,7 +2,7 @@
 
 Provides GPU demosaicing of images captured with Bayer color filter arrays (CFA) with batch support. This implementation relies on pure PyTorch functionality and thus avoids any extra build steps.
 
-Currently, three modules based on bilinear interpolation are provided
+Currently, the following methods are provided
  - `debayer.Debayer2x2` uses 2x2 convolutions. Trades speed for color accuracy.
  - `debayer.Debayer3x3` uses 3x3 convolutions. Slower but reconstruction results comparable with `OpenCV.cvtColor`.
  - `debayer.Debayer5x5` uses 5x5 convolutions based on Malver-He-Cutler algorithm. Slower but sharper than `OpenCV.cvtColor`.
