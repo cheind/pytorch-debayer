@@ -15,11 +15,12 @@ except ImportError:
 import debayer
 
 
-def run_pytorch(deb, t, dev, **kwargs):
+def run_pytorch(deb, t, dev, prec, **kwargs):
     time_upload = kwargs.get("time_upload", False)
     B = kwargs.get("batch_size", 10)
+    runs = kwargs.get("runs", 100)
 
-    t = t.repeat(B, 1, 1, 1)
+    t = t.repeat(B, 1, 1, 1).to(prec)
     t = t.pin_memory() if time_upload else t.to(dev)
 
     def run_once():
@@ -36,19 +37,20 @@ def run_pytorch(deb, t, dev, **kwargs):
     end = torch.cuda.Event(enable_timing=True)
 
     start.record()
-    N = 1000
+    N = runs
     for _ in range(N):
         run_once()
     end.record()
     torch.cuda.synchronize()
 
-    return start.elapsed_time(end) / (N * B)
+    return start.elapsed_time(end) / (runs * B)
 
 
 def run_opencv(b, **kwargs):
     # see https://www.learnopencv.com/opencv-transparent-api/
     time_upload = kwargs.get("time_upload", False)
     transparent_api = kwargs.get("transparent_api", False)
+    runs = kwargs.get("runs", 100)
     B = kwargs.get("batch_size", 10)
 
     b = cv2.UMat(b) if (transparent_api and not time_upload) else b
@@ -64,56 +66,69 @@ def run_opencv(b, **kwargs):
     if transparent_api:
         z = y.get()
 
-    N = 1000 * B
+    N = runs * B
     start = time.time()
     for _ in range(N):
         y = run_once()
     if transparent_api:
         z = y.get()
-    return (time.time() - start) / N * 1000
+    return (time.time() - start) / N * runs
 
 
 def fmt_line(method, devname, elapsed, **modeargs):
+    modeargs.pop("batch_size")
+    modeargs.pop("runs")
     mode = ",".join([f"{k}={v}" for k, v in modeargs.items()])
-    return f"| {method} | {devname} | {elapsed:4.2f} | {mode} |"
+    return f"| {method} | {devname} | {elapsed:5.3f} | {mode} |"
 
 
 @torch.no_grad()
 def bench_debayer(b, args):
     devname = torch.cuda.get_device_name(args.dev)
-    mode = dict(time_upload=args.time_upload, batch_size=args.batch)
+    mode = dict(time_upload=args.time_upload, batch_size=args.batch, runs=args.runs)
 
-    t = (torch.tensor(b).clone().unsqueeze(0).unsqueeze(0)) / 255.0
+    def run_all(dev, mode):
+        t = (torch.tensor(b).clone().unsqueeze(0).unsqueeze(0)) / 255.0
+        prec = mode["prec"]
 
-    deb = debayer.Debayer2x2().to(args.dev)
-    debname = deb.__class__.__name__
-    e = run_pytorch(deb, t, args.dev, **mode)
-    print(fmt_line(debname, devname, e, **mode))
+        deb = debayer.Debayer2x2().to(dev).to(prec)
+        debname = deb.__class__.__name__
+        e = run_pytorch(deb, t, dev, **mode)
+        print(fmt_line(debname, devname, e, **mode))
 
-    deb = debayer.Debayer3x3().to(args.dev)
-    debname = deb.__class__.__name__
-    e = run_pytorch(deb, t, args.dev, **mode)
-    print(fmt_line(debname, devname, e, **mode))
+        deb = debayer.Debayer3x3().to(dev).to(prec)
+        debname = deb.__class__.__name__
+        e = run_pytorch(deb, t, dev, **mode)
+        print(fmt_line(debname, devname, e, **mode))
 
-    deb = debayer.Debayer5x5().to(args.dev)
-    debname = deb.__class__.__name__
-    e = run_pytorch(deb, t, args.dev, **mode)
-    print(fmt_line(debname, devname, e, **mode))
+        deb = debayer.Debayer5x5().to(dev).to(prec)
+        debname = deb.__class__.__name__
+        e = run_pytorch(deb, t, dev, **mode)
+        print(fmt_line(debname, devname, e, **mode))
 
-    deb = debayer.DebayerSplit().to(args.dev)
-    debname = deb.__class__.__name__
-    e = run_pytorch(deb, t, args.dev, **mode)
-    print(fmt_line(debname, devname, e, **mode))
+        deb = debayer.DebayerSplit().to(dev).to(prec)
+        debname = deb.__class__.__name__
+        e = run_pytorch(deb, t, dev, **mode)
+        print(fmt_line(debname, devname, e, **mode))
+
+    run_all(args.dev, mode={**{"prec": torch.float32}, **mode})
+    run_all(args.dev, mode={**{"prec": torch.float16}, **mode})
 
 
 def bench_opencv(b, args):
     mode = dict(
-        transparent_api=False, time_upload=args.time_upload, batch_size=args.batch
+        transparent_api=False,
+        time_upload=args.time_upload,
+        batch_size=args.batch,
+        runs=args.runs,
     )
     e = run_opencv(b, **mode)
     print(fmt_line(f"OpenCV {cv2.__version__}", "CPU ??", e, **mode))
     mode = dict(
-        transparent_api=True, time_upload=args.time_upload, batch_size=args.batch
+        transparent_api=True,
+        time_upload=args.time_upload,
+        batch_size=args.batch,
+        runs=args.runs,
     )
     e = run_opencv(b, **mode)
     print(fmt_line(f"OpenCV {cv2.__version__}", "GPU ??", e, **mode))
@@ -124,6 +139,7 @@ def main():
     parser.add_argument("--dev", default="cuda")
     parser.add_argument("--batch", default=10, type=int)
     parser.add_argument("--time-upload", action="store_true")
+    parser.add_argument("--runs", type=int, default=100, help="Number runs")
     parser.add_argument("image")
     args = parser.parse_args()
 

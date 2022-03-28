@@ -13,14 +13,17 @@ from . import utils
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dev", default="cuda")
+    parser.add_argument("--half", action="store_true", help='Use 16bit fp precision')
     parser.add_argument("image")
     args = parser.parse_args()
 
+    prec = torch.float16 if args.half else torch.float32
+
     methods = {
-        "Debayer2x2": debayer.Debayer2x2().to(args.dev),
-        "Debayer3x3": debayer.Debayer3x3().to(args.dev),
-        "DebayerSplit": debayer.DebayerSplit().to(args.dev),
-        "Debayer5x5": debayer.Debayer5x5().to(args.dev),
+        "Debayer2x2": debayer.Debayer2x2().to(args.dev).to(prec),
+        "Debayer3x3": debayer.Debayer3x3().to(args.dev).to(prec),
+        "DebayerSplit": debayer.DebayerSplit().to(args.dev).to(prec),
+        "Debayer5x5": debayer.Debayer5x5().to(args.dev).to(prec),
     }
 
     # Read Bayer image
@@ -30,15 +33,15 @@ def main():
     rgb_opencv = cv2.cvtColor(b, cv2.COLOR_BAYER_BG2RGB) / 255.0
 
     # Compute debayer results
-    # Prepare input with shape Bx1xHxW and
+    # Prepare input with shape Bx1xHxW and    
     t = (
-        torch.from_numpy(b).to(torch.float32).unsqueeze(0).unsqueeze(0).to(args.dev)
+        torch.from_numpy(b).to(prec).unsqueeze(0).unsqueeze(0).to(args.dev)
     ) / 255.0
 
     res = {
         **{"OpenCV": rgb_opencv},
         **{
-            k: deb(t).squeeze().permute(1, 2, 0).cpu().numpy()
+            k: deb(t).squeeze().permute(1, 2, 0).to(torch.float32).cpu().numpy()
             for k, deb in methods.items()
         },
     }
