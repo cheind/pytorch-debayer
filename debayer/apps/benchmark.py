@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import argparse
 import time
+import cpuinfo
 from PIL import Image
 
 try:
@@ -166,6 +167,7 @@ def main():
 
     print(f"torch: v{torch.__version__}")
     print(f"pytorch-debayer: v{debayer.__version__}")
+    print(f"{cpuinfo.get_cpu_info()['brand_raw']}")
 
     print()
     print("Method | Device | Elapsed [msec/image] | Mode |")
