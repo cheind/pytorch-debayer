@@ -1,6 +1,6 @@
 ## pytorch-debayer
 
-Provides GPU demosaicing of images captured with Bayer color filter arrays (CFA) with batch support. This implementation relies on pure PyTorch functionality and thus avoids any extra build steps. This library is most useful when downstream image processing happens with PyTorch models. Additionally the upload of Bayer images reduces the occupied bandwidth compared to color 
+Provides GPU demosaicing of images captured with Bayer color filter arrays (CFA) with batch support. This implementation relies on pure PyTorch functionality and thus avoids any extra build steps. This library is most useful when downstream image processing happens with PyTorch models. Additionally, uploading of Bayer images (instead of RGB) significantly reduces the occupied bandwidth.
 
 ### Features
  - **Methods** Currently, the following methods are provided
