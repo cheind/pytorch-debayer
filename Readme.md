@@ -1,16 +1,14 @@
 ## pytorch-debayer
 
-Provides GPU demosaicing of images captured with Bayer color filter arrays (CFA) with batch support. This implementation relies on pure PyTorch functionality and thus avoids any extra build steps.
+Provides GPU demosaicing of images captured with Bayer color filter arrays (CFA) with batch support. This implementation relies on pure PyTorch functionality and thus avoids any extra build steps. This library is most useful when downstream image processing happens with PyTorch models. Additionally the upload of Bayer images reduces the occupied bandwidth compared to color 
 
-Currently, the following methods are provided
- - `debayer.Debayer2x2` uses 2x2 convolutions. Trades speed for color accuracy.
- - `debayer.Debayer3x3` uses 3x3 convolutions. Slower but reconstruction results comparable with `OpenCV.cvtColor`.
- - `debayer.Debayer5x5` uses 5x5 convolutions based on Malver-He-Cutler algorithm. Slower but sharper than `OpenCV.cvtColor`.
- - `debayer.DebayerSplit` faster than Debayer3x3 but decreased image quality.
-
-As of `v1.0.2` the method `debayer.Debayer5x5` should be used per default.
-
-This library is most useful when downstream image processing happens with PyTorch models. Additionally the upload of Bayer images reduces the occupied bandwidth compared to color images.
+### Features
+ - **Methods** Currently, the following methods are provided
+    - `debayer.Debayer2x2` uses 2x2 convolutions. Trades speed for color accuracy.
+    - `debayer.Debayer3x3` uses 3x3 convolutions. Slower but reconstruction results comparable with `OpenCV.cvtColor`.
+    - `debayer.Debayer5x5` uses 5x5 convolutions based on Malver-He-Cutler algorithm. Slower but sharper than `OpenCV.cvtColor`. Should be your default.
+    - `debayer.DebayerSplit` faster than Debayer3x3 but decreased image quality.    
+ - **Precision** Each method supports `float32` or `float16` precision. 
 
 ### Usage
 Usage is straight forward
@@ -32,18 +30,6 @@ see [this example](debayer/apps/example.py) for elaborate code.
 ```
 pip install git+https://github.com/cheind/pytorch-debayer
 ```
-
-### Limitations
-
-Currently **pytorch-debayer** requires
- - BG-Bayer color filter array layout. According to OpenCV naming conventions (see [here](https://docs.opencv.org/4.2.0/de/d25/imgproc_color_conversions.html) towards end of file) that means your Bayer input image must be arranged in the following way
- ```
-RGRGRG...
-GBGBGB...
-RGRGRG...
-.........
-```
- - the number of image rows and columns to be even.
 
 ### Benchmarks
 Performance comparison on a 5 megapixel [test image](etc/test.bmp) using a batch size of 10. 
@@ -101,3 +87,15 @@ Created using
 python -m debayer.apps.compare etc\test.bmp
 # Then select a region and check `tmp`/
 ```
+
+### Limitations
+
+Currently **pytorch-debayer** requires
+ - BG-Bayer color filter array layout. According to OpenCV naming conventions (see [here](https://docs.opencv.org/4.2.0/de/d25/imgproc_color_conversions.html) towards end of file) that means your Bayer input image must be arranged in the following way
+ ```
+RGRGRG...
+GBGBGB...
+RGRGRG...
+.........
+```
+ - the number of image rows and columns to be even.
