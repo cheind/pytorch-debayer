@@ -164,7 +164,9 @@ def main():
 
     b = np.asarray(Image.open(args.image).convert("L"))
 
-    print(f"running pytorch-debayer: {debayer.__version__}")
+    print(f"torch: v{torch.__version__}")
+    print(f"pytorch-debayer: v{debayer.__version__}")
+
     print()
     print("Method | Device | Elapsed [msec/image] | Mode |")
     print("|:----:|:------:|:-------:|:----:|")
