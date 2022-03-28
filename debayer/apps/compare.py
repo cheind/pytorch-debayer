@@ -13,7 +13,8 @@ from . import utils
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dev", default="cuda")
-    parser.add_argument("--half", action="store_true", help='Use 16bit fp precision')
+    parser.add_argument("--half", action="store_true", help="Use 16bit fp precision")
+    parser.add_argument("--save-zoom", action="store_true", help="Save zoom regions")
     parser.add_argument("image")
     args = parser.parse_args()
 
@@ -33,26 +34,32 @@ def main():
     rgb_opencv = cv2.cvtColor(b, cv2.COLOR_BAYER_BG2RGB) / 255.0
 
     # Compute debayer results
-    # Prepare input with shape Bx1xHxW and    
-    t = (
-        torch.from_numpy(b).to(prec).unsqueeze(0).unsqueeze(0).to(args.dev)
-    ) / 255.0
+    # Prepare input with shape Bx1xHxW and
+    t = (torch.from_numpy(b).to(prec).unsqueeze(0).unsqueeze(0).to(args.dev)) / 255.0
 
     res = {
-        **{"OpenCV": rgb_opencv},
+        **{"Original": b, "OpenCV": rgb_opencv},
         **{
             k: deb(t).squeeze().permute(1, 2, 0).to(torch.float32).cpu().numpy()
             for k, deb in methods.items()
         },
     }
 
-    fig = plt.figure(constrained_layout=True, figsize=(12, 4))
-    spec = gridspec.GridSpec(ncols=5, nrows=1, figure=fig)
+    nrows = 2
+    ncols = 3
+    h, w = b.shape
+    W, H = plt.figaspect((h * nrows) / (w * ncols))
 
-    def show_image(fig, spec, row, col, img, title, share_ax=None):
-        ax = fig.add_subplot(spec[row, col], sharey=share_ax, sharex=share_ax)
+    fig = plt.figure(constrained_layout=True, figsize=(W, H))
+    spec = gridspec.GridSpec(ncols=ncols, nrows=nrows, figure=fig)
+    spec.update(wspace=0, hspace=0)
+
+    ax = None
+    for idx, (key, img) in enumerate(res.items()):
+        ax = fig.add_subplot(spec[idx], sharey=ax, sharex=ax)
         ax.imshow(img, interpolation="nearest")
-        ax.set_title(title, size=10)
+        ax.set_title(key, size=10, y=1.0, pad=-14, color="white")
+        ax.set_frame_on(False)
         ax.tick_params(
             bottom=False,
             top=False,
@@ -61,17 +68,6 @@ def main():
             labelleft=False,
             labelbottom=False,
         )
-        return ax
-
-    #
-    axcv = show_image(fig, spec, 0, 0, rgb_opencv, "OpenCV")
-    show_image(fig, spec, 0, 1, res["Debayer2x2"], "Debayer2x2", axcv)
-    show_image(fig, spec, 0, 2, res["DebayerSplit"], "DebayerSplit", axcv)
-    show_image(fig, spec, 0, 3, res["Debayer3x3"], "Debayer3x3", axcv)
-    show_image(fig, spec, 0, 4, res["Debayer5x5"], "Debayer5x5", axcv)
-
-    fig.suptitle("Comparison of Demosaicing Methods", size=10)
-    spec.tight_layout(fig, rect=[0, 0, 1, 0.97])
 
     def create_image_mosaic(event_ax):
         left, right = event_ax.get_xlim()
@@ -94,7 +90,8 @@ def main():
         fig.savefig(path)
         plt.close(fig)
 
-    axcv.callbacks.connect("ylim_changed", on_ylims_change)
+    if args.save_zoom:
+        ax.callbacks.connect("ylim_changed", on_ylims_change)
 
     plt.show()
 
