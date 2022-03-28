@@ -1,7 +1,6 @@
-import torch
 import numpy as np
 
-from .layouts import Layout
+from .debayer import Layout
 
 
 def to_bayer(x: np.ndarray, layout=Layout.RGGB) -> np.ndarray:
@@ -19,9 +18,3 @@ def to_bayer(x: np.ndarray, layout=Layout.RGGB) -> np.ndarray:
     pp = np.tile(p, (H // 2, W // 2))
     b = np.take_along_axis(x, np.expand_dims(pp, -1), -1).squeeze(-1)
     return b
-
-
-def remove_padding(x: torch.Tensor, paddings: tuple[int, int, int, int]):
-    l, r, t, b = paddings
-    h, w = x.shape[-2:]
-    return x[..., t : h - b, l : w - r]

@@ -1,9 +1,21 @@
+import enum
+
 import torch
 import torch.nn
 import torch.nn.functional
 
-from .layouts import Layout, LayoutPaddingLUT
-from .utils import remove_padding
+
+class Layout(enum.Enum):
+    """Possible Bayer color filter array layouts.
+
+    The value of each entry is the color index (R=0,G=1,B=2)
+    within a 2x2 Bayer block.
+    """
+
+    RGGB = (0, 1, 1, 2)
+    GRBG = (1, 0, 2, 1)
+    GBRG = (1, 2, 0, 1)
+    BGGR = (2, 1, 1, 0)
 
 
 class Debayer3x3(torch.nn.Module):
@@ -19,7 +31,7 @@ class Debayer3x3(torch.nn.Module):
     pixel location.
 
     We convolve the image with these 5 kernels using stride=1
-    and a one pixel replication padding. Finally, we gather
+    and a one pixel reflection padding. Finally, we gather
     the correct channel values for each pixel location. Todo so,
     we recognize that the Bayer pattern repeats horizontally and
     vertically every 2 pixels. Therefore, we define the correct
@@ -30,17 +42,13 @@ class Debayer3x3(torch.nn.Module):
     (G1,G2). The lookups for the two greens differ.
     """
 
-    def __init__(self):
+    def __init__(self, layout: Layout = Layout.RGGB):
         super(Debayer3x3, self).__init__()
-        # TODO remove identiy kernel and instead cat with input, see Debayer 5x5
+        self.layout = layout
         # fmt: off
         self.kernels = torch.nn.Parameter(
             torch.tensor(
                 [
-                    [0, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 0],
-
                     [0, 0.25, 0],
                     [0.25, 0, 0.25],
                     [0, 0.25, 0],
@@ -57,25 +65,13 @@ class Debayer3x3(torch.nn.Module):
                     [0, 0, 0],
                     [0, 0.5, 0],
                 ]
-            ).view(5, 1, 3, 3),
+            ).view(4, 1, 3, 3),
             requires_grad=False,
         )
         # fmt: on
 
         self.index = torch.nn.Parameter(
-            torch.tensor(
-                [
-                    # dest channel r
-                    [0, 3],  # pixel is R,G1
-                    [4, 2],  # pixel is G2,B
-                    # dest channel g
-                    [1, 0],  # pixel is R,G1
-                    [0, 1],  # pixel is G2,B
-                    # dest channel b
-                    [2, 4],  # pixel is R,G1
-                    [3, 0],  # pixel is G2,B
-                ]
-            ).view(1, 3, 2, 2),
+            self._index_from_layout(layout),
             requires_grad=False,
         )
 
@@ -94,42 +90,66 @@ class Debayer3x3(torch.nn.Module):
         """
         B, C, H, W = x.shape
 
-        x = torch.nn.functional.pad(x, (1, 1, 1, 1), mode="replicate")
-        c = torch.nn.functional.conv2d(x, self.kernels, stride=1)
+        xpad = torch.nn.functional.pad(x, (1, 1, 1, 1), mode="reflect")
+        c = torch.nn.functional.conv2d(xpad, self.kernels, stride=1)
+        c = torch.cat((c, x), 1)  # Concat with input to give identity kernel Bx5xHxW
+
         rgb = torch.gather(c, 1, self.index.repeat(B, 1, H // 2, W // 2))
         return rgb
 
+    def _index_from_layout(self, layout: Layout) -> torch.Tensor:
+        """Returns a 1x3x2x2 index tensor for each color RGB in a 2x2 bayer tile.
+
+        Note, the index corresponding to the identity kernel is 4, which will be
+        correct after concatenating the convolved output with the input image.
+        """
+        #       ...
+        # ... b g b g ...
+        # ... g R G r ...
+        # ... b G B g ...
+        # ... g r g r ...
+        #       ...
+        # fmt: off
+        rggb = torch.tensor(
+            [
+                # dest channel r
+                [4, 2],  # pixel is R,G1
+                [3, 1],  # pixel is G2,B
+                # dest channel g
+                [0, 4],  # pixel is R,G1
+                [4, 0],  # pixel is G2,B
+                # dest channel b
+                [1, 3],  # pixel is R,G1
+                [2, 4],  # pixel is G2,B
+            ]
+        ).view(1, 3, 2, 2)
+        # fmt: on
+        return {
+            Layout.RGGB: rggb,
+            Layout.GRBG: torch.roll(rggb, 1, -1),
+            Layout.GBRG: torch.roll(rggb, 1, -2),
+            Layout.BGGR: torch.roll(rggb, (1, 1), (-1, -2)),
+        }.get(layout)
+
 
 class Debayer2x2(torch.nn.Module):
-    """Demosaicing of Bayer images using 2x2 convolutions.
+    """Fast demosaicing of Bayer images using 2x2 convolutions.
 
-    Requires BG-Bayer color filter array layout. That is,
-    the image[1,1]='B', image[1,2]='G'. This corresponds
-    to OpenCV naming conventions.
+    This method uses 3 kernels of size 2x2 and stride 2. Each kernel
+    corresponds to a single color RGB. For R and B the corresponding
+    value from each 2x2 Bayer block is taken according to the layout.
+    For G, G1 and G2 are averaged. The resulting image has half width/
+    height and is upsampled by a factor of 2.
     """
 
-    def __init__(self, layout=Layout.RGGB):
+    def __init__(self, layout: Layout = Layout.RGGB):
         super(Debayer2x2, self).__init__()
+        self.layout = layout
 
-        # fmt: off
         self.kernels = torch.nn.Parameter(
-            torch.tensor(
-                [
-                    [1, 0],
-                    [0, 0],
-
-                    [0, 0.5],
-                    [0.5, 0],
-
-                    [0, 0],
-                    [0, 1],
-                ]
-            ).view(3, 1, 2, 2),
+            self._kernels_from_layout(layout),
             requires_grad=False,
         )
-        # fmt: on
-        self.extra_pads = LayoutPaddingLUT[layout]
-        self.extra_pads_stride = [t * 2 for t in self.extra_pads]
 
     def forward(self, x):
         """Debayer image.
@@ -144,16 +164,26 @@ class Debayer2x2(torch.nn.Module):
         rgb : Bx3xHxW tensor
             Color images in RGB channel order.
         """
-        x = torch.nn.functional.pad(x, self.extra_pads_stride, mode="replicate")
-        print(x.shape)
         x = torch.nn.functional.conv2d(x, self.kernels, stride=2)
-        print(x.shape, "-------")
-        x = remove_padding(x, self.extra_pads)
+
         x = torch.nn.functional.interpolate(
             x, scale_factor=2, mode="bilinear", align_corners=False
         )
-        print(x.shape, "--------")
         return x
+
+    def _kernels_from_layout(self, layout: Layout) -> torch.Tensor:
+        v = torch.tensor(layout.value).reshape(2, 2)
+        r = torch.zeros(2, 2)
+        r[v == 0] = 1.0
+
+        g = torch.zeros(2, 2)
+        g[v == 1] = 0.5
+
+        b = torch.zeros(2, 2)
+        b[v == 2] = 1.0
+
+        k = torch.stack((r, g, b), 0).unsqueeze(1)  # 3x1x2x2
+        return k
 
 
 class DebayerSplit(torch.nn.Module):
@@ -164,10 +194,13 @@ class DebayerSplit(torch.nn.Module):
     to OpenCV naming conventions.
     """
 
-    def __init__(self):
+    def __init__(self, layout: Layout = Layout.RGGB):
         super().__init__()
+        if layout != Layout.RGGB:
+            raise NotImplementedError("DebayerSplit only implemented for RGGB layout.")
+        self.layout = layout
 
-        self.pad = torch.nn.ReplicationPad2d(1)
+        self.pad = torch.nn.ReflectionPad2d(1)
         self.kernel = torch.nn.Parameter(
             torch.tensor([[0, 1, 0], [1, 0, 1], [0, 1, 0]])[None, None] * 0.25
         )
@@ -222,9 +255,9 @@ class Debayer5x5(torch.nn.Module):
     Malvar, Henrique S., Li-wei He, and Ross Cutler. "High-quality linear interpolation for demosaicing of Bayer-patterned color images." 2004 IEEE International Conference on Acoustics, Speech, and Signal Processing. Vol. 3. IEEE, 2004.
     """
 
-    def __init__(self):
+    def __init__(self, layout: Layout = Layout.RGGB):
         super(Debayer5x5, self).__init__()
-
+        self.layout = layout
         # fmt: off
         self.kernels = torch.nn.Parameter(
             torch.tensor(
@@ -272,19 +305,7 @@ class Debayer5x5(torch.nn.Module):
 
         self.index = torch.nn.Parameter(
             # Below, note that index 4 corresponds to identity kernel
-            torch.tensor(
-                [
-                    # dest channel r
-                    [4, 1],  # pixel is R,G1
-                    [2, 3],  # pixel is G2,B
-                    # dest channel g
-                    [0, 4],  # pixel is R,G1
-                    [4, 0],  # pixel is G2,B
-                    # dest channel b
-                    [3, 2],  # pixel is R,G1
-                    [1, 4],  # pixel is G2,B
-                ]
-            ).view(1, 3, 2, 2),
+            self._index_from_layout(layout),
             requires_grad=False,
         )
 
@@ -303,11 +324,44 @@ class Debayer5x5(torch.nn.Module):
         """
         B, C, H, W = x.shape
 
-        xpad = torch.nn.functional.pad(x, (2, 2, 2, 2), mode="replicate")
+        xpad = torch.nn.functional.pad(x, (2, 2, 2, 2), mode="reflect")
         planes = torch.nn.functional.conv2d(xpad, self.kernels, stride=1)
         planes = torch.cat(
             (planes, x), 1
         )  # Concat with input to give identity kernel Bx5xHxW
         rgb = torch.gather(planes, 1, self.index.repeat(B, 1, H // 2, W // 2))
         return torch.clamp(rgb, 0, 1)
-        return rgb
+
+    def _index_from_layout(self, layout: Layout) -> torch.Tensor:
+        """Returns a 1x3x2x2 index tensor for each color RGB in a 2x2 bayer tile.
+
+        Note, the index corresponding to the identity kernel is 4, which will be
+        correct after concatenating the convolved output with the input image.
+        """
+        #       ...
+        # ... b g b g ...
+        # ... g R G r ...
+        # ... b G B g ...
+        # ... g r g r ...
+        #       ...
+        # fmt: off
+        rggb = torch.tensor(
+            [
+                # dest channel r
+                [4, 1],  # pixel is R,G1
+                [2, 3],  # pixel is G2,B
+                # dest channel g
+                [0, 4],  # pixel is R,G1
+                [4, 0],  # pixel is G2,B
+                # dest channel b
+                [3, 2],  # pixel is R,G1
+                [1, 4],  # pixel is G2,B
+            ]
+        ).view(1, 3, 2, 2)
+        # fmt: on
+        return {
+            Layout.RGGB: rggb,
+            Layout.GRBG: torch.roll(rggb, 1, -1),
+            Layout.GBRG: torch.roll(rggb, 1, -2),
+            Layout.BGGR: torch.roll(rggb, (1, 1), (-1, -2)),
+        }.get(layout)

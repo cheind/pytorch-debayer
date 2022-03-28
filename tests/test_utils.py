@@ -1,7 +1,7 @@
 import numpy as np
 
 from debayer import utils
-from debayer.layouts import Layout
+from debayer.debayer import Layout
 
 
 def test_to_bayer():
