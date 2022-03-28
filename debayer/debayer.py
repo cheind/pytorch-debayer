@@ -154,7 +154,7 @@ class DebayerSplit(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.pad = torch.nn.ReflectionPad2d(1)
+        self.pad = torch.nn.ReplicationPad2d(1)
         self.kernel = torch.nn.Parameter(
             torch.tensor([[0, 1, 0], [1, 0, 1], [0, 1, 0]])[None, None] * 0.25
         )
