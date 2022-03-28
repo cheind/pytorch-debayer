@@ -1,11 +1,13 @@
 import argparse
 import cv2
+import numpy as np
 from pathlib import Path
 import torch
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 import debayer
+from debayer.utils import to_bayer
 from . import utils
 
 
@@ -15,6 +17,11 @@ def main():
     parser.add_argument("--dev", default="cuda")
     parser.add_argument("--half", action="store_true", help="Use 16bit fp precision")
     parser.add_argument("--save-zoom", action="store_true", help="Save zoom regions")
+    parser.add_argument(
+        "--full-color",
+        action="store_true",
+        help="Treat the input image to be full-color. Bayer image will be derived.",
+    )
     parser.add_argument("image")
     args = parser.parse_args()
 
@@ -28,7 +35,14 @@ def main():
     }
 
     # Read Bayer image
-    b = cv2.imread(args.image, cv2.IMREAD_GRAYSCALE)
+    input_image: np.ndarray = plt.imread(args.image)
+    if input_image.ndim > 2:
+        if args.full_color:
+            b = to_bayer(input_image[..., :3], layout=debayer.Layout.RGGB)
+        else:
+            b = input_image[..., 0]
+    else:
+        b = input_image
 
     # Compute OpenCV result
     rgb_opencv = cv2.cvtColor(b, cv2.COLOR_BAYER_BG2RGB) / 255.0
@@ -38,7 +52,7 @@ def main():
     t = (torch.from_numpy(b).to(prec).unsqueeze(0).unsqueeze(0).to(args.dev)) / 255.0
 
     res = {
-        **{"Original": b, "OpenCV": rgb_opencv},
+        **{"Original": input_image, "OpenCV": rgb_opencv},
         **{
             k: deb(t).squeeze().permute(1, 2, 0).to(torch.float32).cpu().numpy()
             for k, deb in methods.items()

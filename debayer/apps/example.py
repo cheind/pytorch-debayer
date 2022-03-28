@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 import debayer
+from debayer.utils import to_bayer
 from . import utils
 
 
@@ -17,15 +18,25 @@ def main():
         default="Debayer5x5",
         help="Debayer algorithm to use.",
     )
-    parser.add_argument("--half", action="store_true", help='Use 16bit fp precision')
+    parser.add_argument("--half", action="store_true", help="Use 16bit fp precision")
+    parser.add_argument(
+        "--full-color",
+        action="store_true",
+        help="Treat the input image to be full-color. Bayer image will be derived.",
+    )
     parser.add_argument("--dev", default="cuda")
     parser.add_argument("image")
-    args = parser.parse_args()    
+    args = parser.parse_args()
 
     # Read Bayer image
-    b: np.ndarray = plt.imread(args.image)
-    if b.ndim > 2:
-        b = b[..., 0]
+    input_image: np.ndarray = plt.imread(args.image)
+    if input_image.ndim > 2:
+        if args.full_color:
+            b = to_bayer(input_image[..., :3], layout=debayer.Layout.RGGB)
+        else:
+            b = input_image[..., 0]
+    else:
+        b = input_image
 
     # Setup precision
     prec = torch.float16 if args.half else torch.float32
@@ -40,15 +51,15 @@ def main():
     deb = deb.to(args.dev).to(prec)
 
     # Prepare input with shape Bx1xHxW and
-    t = (
-        torch.tensor(b).to(prec).unsqueeze(0).unsqueeze(0).to(args.dev)
-    ) / 255.0
+    t = (torch.tensor(b).to(prec).unsqueeze(0).unsqueeze(0).to(args.dev)) / 255.0
 
     # Compute and move back to CPU
     rgb = deb(t).squeeze().permute(1, 2, 0).cpu().to(torch.float32).numpy()
 
     fig = utils.create_mosaic(
-        [b, rgb], roi=(0, rgb.shape[1], 0, rgb.shape[0]), labels=["Bayer", args.method]
+        [input_image, rgb],
+        roi=(0, rgb.shape[1], 0, rgb.shape[0]),
+        labels=["Bayer", args.method],
     )
     fig.savefig(f"tmp/{Path(args.image).with_suffix('.png').name}")
     plt.show()
