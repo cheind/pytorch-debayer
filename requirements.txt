@@ -1,2 +1,4 @@
 torch>=1.3
 py-cpuinfo
+matplotlib
+numpy
