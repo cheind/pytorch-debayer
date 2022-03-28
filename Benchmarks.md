@@ -11,16 +11,16 @@ pytorch-debayer: v1.1.0
 
 Method | Device | Elapsed [msec/image] | Mode |
 |:----:|:------:|:-------:|:----:|
-| Debayer2x2 | GeForce GTX 1080 Ti | 0.646 | prec=torch.float32,time_upload=False |
-| Debayer3x3 | GeForce GTX 1080 Ti | 3.067 | prec=torch.float32,time_upload=False |
-| Debayer5x5 | GeForce GTX 1080 Ti | 6.511 | prec=torch.float32,time_upload=False |
-| DebayerSplit | GeForce GTX 1080 Ti | 2.701 | prec=torch.float32,time_upload=False |
-| Debayer2x2 | GeForce GTX 1080 Ti | 0.579 | prec=torch.float16,time_upload=False |
-| Debayer3x3 | GeForce GTX 1080 Ti | 2.906 | prec=torch.float16,time_upload=False |
-| Debayer5x5 | GeForce GTX 1080 Ti | 4.652 | prec=torch.float16,time_upload=False |
-| DebayerSplit | GeForce GTX 1080 Ti | 1.155 | prec=torch.float16,time_upload=False |
-| OpenCV 4.5.3 | CPU/OpenCL | 2.171 | transparent_api=False,time_upload=False |
-| OpenCV 4.5.3 | CPU/OpenCL | 10.782 | transparent_api=True,time_upload=False |
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.653 | prec=torch.float32,time_upload=False |
+| Debayer3x3 | GeForce GTX 1080 Ti | 3.056 | prec=torch.float32,time_upload=False |
+| Debayer5x5 | GeForce GTX 1080 Ti | 6.343 | prec=torch.float32,time_upload=False |
+| DebayerSplit | GeForce GTX 1080 Ti | 2.635 | prec=torch.float32,time_upload=False |
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.562 | prec=torch.float16,time_upload=False |
+| Debayer3x3 | GeForce GTX 1080 Ti | 2.812 | prec=torch.float16,time_upload=False |
+| Debayer5x5 | GeForce GTX 1080 Ti | 4.545 | prec=torch.float16,time_upload=False |
+| DebayerSplit | GeForce GTX 1080 Ti | 1.148 | prec=torch.float16,time_upload=False |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 2.097 | transparent_api=False,time_upload=False |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 11.042 | transparent_api=True,time_upload=False |
 
 
 
