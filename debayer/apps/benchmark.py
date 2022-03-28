@@ -21,7 +21,7 @@ def run_pytorch(deb, t, dev, prec, **kwargs):
     B = kwargs.get("batch_size", 10)
     runs = kwargs.get("runs", 100)
 
-    t = t.repeat(B, 1, 1, 1).to(prec)
+    t = t.repeat(B, 1, 1, 1).to(prec).contiguous()
     t = t.pin_memory() if time_upload else t.to(dev)
 
     def run_once():
@@ -33,18 +33,25 @@ def run_pytorch(deb, t, dev, prec, **kwargs):
     run_once()
     run_once()
 
-    torch.cuda.synchronize()
-    start = torch.cuda.Event(enable_timing=True)
-    end = torch.cuda.Event(enable_timing=True)
+    if dev != "cpu":
+        torch.cuda.synchronize()
+        start = torch.cuda.Event(enable_timing=True)
+        end = torch.cuda.Event(enable_timing=True)
 
-    start.record()
-    N = runs
-    for _ in range(N):
-        run_once()
-    end.record()
-    torch.cuda.synchronize()
+        start.record()
+        N = runs
+        for _ in range(N):
+            run_once()
+        end.record()
+        torch.cuda.synchronize()
 
-    return start.elapsed_time(end) / (runs * B)
+        return start.elapsed_time(end) / (runs * B)
+    else:
+        t0 = time.perf_counter()
+        N = runs
+        for _ in range(N):
+            run_once()
+        return (time.perf_counter() - t0) / (runs * B) * 1e3
 
 
 def run_opencv(b, **kwargs):
@@ -85,7 +92,10 @@ def fmt_line(method, devname, elapsed, **modeargs):
 
 @torch.no_grad()
 def bench_debayer(b, args):
-    devname = torch.cuda.get_device_name(args.dev)
+    if args.dev != "cpu":
+        devname = torch.cuda.get_device_name(args.dev)
+    else:
+        devname = cpuinfo.get_cpu_info()["brand_raw"]
     mode = dict(time_upload=args.time_upload, batch_size=args.batch, runs=args.runs)
 
     def run_all(dev, mode):
