@@ -123,7 +123,7 @@ def bench_debayer(b, args):
 def bench_opencv(b, args):
     if not "OpenCV" in args.methods:
         return
-    devname = torch.cuda.get_device_name(args.dev)
+    devname = cpuinfo.get_cpu_info()["brand_raw"]
     mode = dict(
         transparent_api=False,
         time_upload=args.time_upload,
@@ -131,7 +131,7 @@ def bench_opencv(b, args):
         runs=args.runs,
     )
     e = run_opencv(b, **mode)
-    print(fmt_line(f"OpenCV {cv2.__version__}", "CPU/OpenCL", e, **mode))
+    print(fmt_line(f"OpenCV {cv2.__version__}", devname, e, **mode))
     mode = dict(
         transparent_api=True,
         time_upload=args.time_upload,
@@ -139,7 +139,7 @@ def bench_opencv(b, args):
         runs=args.runs,
     )
     e = run_opencv(b, **mode)
-    print(fmt_line(f"OpenCV {cv2.__version__}", "CPU/OpenCL", e, **mode))
+    print(fmt_line(f"OpenCV {cv2.__version__}", devname, e, **mode))
 
 
 ALL_METHODS = ["Debayer2x2", "Debayer3x3", "Debayer5x5", "DebayerSplit", "OpenCV"]
@@ -167,7 +167,6 @@ def main():
 
     print(f"torch: v{torch.__version__}")
     print(f"pytorch-debayer: v{debayer.__version__}")
-    print(f"{cpuinfo.get_cpu_info()['brand_raw']}")
 
     print()
     print("Method | Device | Elapsed [msec/image] | Mode |")
