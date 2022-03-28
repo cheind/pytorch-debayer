@@ -130,7 +130,7 @@ def bench_opencv(b, args):
         runs=args.runs,
     )
     e = run_opencv(b, **mode)
-    print(fmt_line(f"OpenCV {cv2.__version__}", devname, e, **mode))
+    print(fmt_line(f"OpenCV {cv2.__version__}", "CPU/OpenCL", e, **mode))
     mode = dict(
         transparent_api=True,
         time_upload=args.time_upload,
@@ -138,7 +138,10 @@ def bench_opencv(b, args):
         runs=args.runs,
     )
     e = run_opencv(b, **mode)
-    print(fmt_line(f"OpenCV {cv2.__version__}", devname, e, **mode))
+    print(fmt_line(f"OpenCV {cv2.__version__}", "CPU/OpenCL", e, **mode))
+
+
+ALL_METHODS = ["Debayer2x2", "Debayer3x3", "Debayer5x5", "DebayerSplit", "OpenCV"]
 
 
 def main():
@@ -148,10 +151,16 @@ def main():
     parser.add_argument("--time-upload", action="store_true")
     parser.add_argument("--runs", type=int, default=100, help="Number runs")
     parser.add_argument(
-        "--methods", default=["Debayer3x3", "Debayer5x5", "OpenCV"], nargs="+"
+        "--methods",
+        default=["Debayer3x3", "Debayer5x5", "OpenCV"],
+        nargs="+",
+        help="Which methods to run. List of methods or `all`.",
+        choices=ALL_METHODS + ["all"],
     )
     parser.add_argument("image")
     args = parser.parse_args()
+    if args.methods == "all":
+        args.methods = ALL_METHODS
 
     b = np.asarray(Image.open(args.image).convert("L"))
 
