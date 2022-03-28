@@ -2,6 +2,17 @@ import torch
 import torch.nn
 import torch.nn.functional
 
+import enum
+
+
+class Layouts(enum.Enum):
+    """Possible Bayer color filter array layouts."""
+
+    RGGB = (0, 1, 1, 2)
+    GRBG = (1, 0, 2, 1)
+    GBRG = (1, 2, 0, 1)
+    BGGR = (2, 1, 1, 0)
+
 
 class Debayer3x3(torch.nn.Module):
     """Demosaicing of Bayer images using 3x3 convolutions.
