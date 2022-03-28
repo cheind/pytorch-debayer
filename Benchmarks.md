@@ -6,6 +6,8 @@ python -m debayer.apps.benchmark etc\test.bmp --methods all
 ```
 
 ## Version 1.1.0
+
+### Machine 1
 torch: v1.10.0+cu113
 pytorch-debayer: v1.1.0
 
@@ -22,7 +24,22 @@ Method | Device | Elapsed [msec/image] | Mode |
 | OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 2.097 | transparent_api=False,time_upload=False |
 | OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 11.042 | transparent_api=True,time_upload=False |
 
+### Machine 2
+torch: v1.11.0+cu113
+pytorch-debayer: v1.1.0
 
+Method | Device | Elapsed [msec/image] | Mode |
+|:----:|:------:|:-------:|:----:|
+| Debayer2x2 | NVIDIA GeForce RTX 3090 | 0.232 | prec=torch.float32,time_upload=False |
+| Debayer3x3 | NVIDIA GeForce RTX 3090 | 1.173 | prec=torch.float32,time_upload=False |
+| Debayer5x5 | NVIDIA GeForce RTX 3090 | 1.723 | prec=torch.float32,time_upload=False |
+| DebayerSplit | NVIDIA GeForce RTX 3090 | 11.959 | prec=torch.float32,time_upload=False |
+| Debayer2x2 | NVIDIA GeForce RTX 3090 | 0.173 | prec=torch.float16,time_upload=False |
+| Debayer3x3 | NVIDIA GeForce RTX 3090 | 1.067 | prec=torch.float16,time_upload=False |
+| Debayer5x5 | NVIDIA GeForce RTX 3090 | 1.687 | prec=torch.float16,time_upload=False |
+| DebayerSplit | NVIDIA GeForce RTX 3090 | 0.371 | prec=torch.float16,time_upload=False |
+| OpenCV 4.5.5 | Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz | 0.696 | transparent_api=False,time_upload=False |
+| OpenCV 4.5.5 | Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz | 5.216 | transparent_api=True,time_upload=False |
 
 
 ## Version 1.0.0
