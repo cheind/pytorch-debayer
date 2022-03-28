@@ -159,7 +159,7 @@ def main():
     )
     parser.add_argument("image")
     args = parser.parse_args()
-    if args.methods == "all":
+    if "all" in args.methods:
         args.methods = ALL_METHODS
 
     b = np.asarray(Image.open(args.image).convert("L"))
