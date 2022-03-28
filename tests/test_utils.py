@@ -1,12 +1,12 @@
 import numpy as np
 
 from debayer import utils
-from debayer.debayer import Layouts
+from debayer.layouts import Layout
 
 
 def test_to_bayer():
     rgb = np.random.rand(20, 30, 3)
-    b = utils.to_bayer(rgb, layout=Layouts.RGGB)
+    b = utils.to_bayer(rgb, layout=Layout.RGGB)
     assert b.shape == (20, 30)
     assert b[0, 0] == rgb[0, 0, 0]
     assert b[0, 1] == rgb[0, 1, 1]
@@ -14,7 +14,7 @@ def test_to_bayer():
     assert b[1, 2] == rgb[1, 2, 1]
     assert b[1, 3] == rgb[1, 3, 2]
 
-    b = utils.to_bayer(rgb, layout=Layouts.BGGR)
+    b = utils.to_bayer(rgb, layout=Layout.BGGR)
     assert b.shape == (20, 30)
     assert b[0, 0] == rgb[0, 0, 2]
     assert b[0, 1] == rgb[0, 1, 1]
@@ -22,7 +22,7 @@ def test_to_bayer():
     assert b[1, 2] == rgb[1, 2, 1]
     assert b[1, 3] == rgb[1, 3, 0]
 
-    b = utils.to_bayer(rgb, layout=Layouts.GBRG)
+    b = utils.to_bayer(rgb, layout=Layout.GBRG)
     assert b.shape == (20, 30)
     assert b[0, 0] == rgb[0, 0, 1]
     assert b[0, 1] == rgb[0, 1, 2]
@@ -30,7 +30,7 @@ def test_to_bayer():
     assert b[1, 2] == rgb[1, 2, 0]
     assert b[1, 3] == rgb[1, 3, 1]
 
-    b = utils.to_bayer(rgb, layout=Layouts.GRBG)
+    b = utils.to_bayer(rgb, layout=Layout.GRBG)
     assert b.shape == (20, 30)
     assert b[0, 0] == rgb[0, 0, 1]
     assert b[0, 1] == rgb[0, 1, 0]

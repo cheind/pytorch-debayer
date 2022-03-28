@@ -2,16 +2,8 @@ import torch
 import torch.nn
 import torch.nn.functional
 
-import enum
-
-
-class Layouts(enum.Enum):
-    """Possible Bayer color filter array layouts."""
-
-    RGGB = (0, 1, 1, 2)
-    GRBG = (1, 0, 2, 1)
-    GBRG = (1, 2, 0, 1)
-    BGGR = (2, 1, 1, 0)
+from .layouts import Layout, LayoutPaddingLUT
+from .utils import remove_padding
 
 
 class Debayer3x3(torch.nn.Module):
@@ -116,22 +108,28 @@ class Debayer2x2(torch.nn.Module):
     to OpenCV naming conventions.
     """
 
-    def __init__(self):
+    def __init__(self, layout=Layout.RGGB):
         super(Debayer2x2, self).__init__()
 
+        # fmt: off
         self.kernels = torch.nn.Parameter(
             torch.tensor(
                 [
                     [1, 0],
                     [0, 0],
+
                     [0, 0.5],
                     [0.5, 0],
+
                     [0, 0],
                     [0, 1],
                 ]
             ).view(3, 1, 2, 2),
             requires_grad=False,
         )
+        # fmt: on
+        self.extra_pads = LayoutPaddingLUT[layout]
+        self.extra_pads_stride = [t * 2 for t in self.extra_pads]
 
     def forward(self, x):
         """Debayer image.
@@ -146,11 +144,15 @@ class Debayer2x2(torch.nn.Module):
         rgb : Bx3xHxW tensor
             Color images in RGB channel order.
         """
-
+        x = torch.nn.functional.pad(x, self.extra_pads_stride, mode="replicate")
+        print(x.shape)
         x = torch.nn.functional.conv2d(x, self.kernels, stride=2)
+        print(x.shape, "-------")
+        x = remove_padding(x, self.extra_pads)
         x = torch.nn.functional.interpolate(
             x, scale_factor=2, mode="bilinear", align_corners=False
         )
+        print(x.shape, "--------")
         return x
 
 
