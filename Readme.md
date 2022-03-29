@@ -1,8 +1,8 @@
-## pytorch-debayer
+# pytorch-debayer
 
 Provides GPU demosaicing of images captured with Bayer color filter arrays (CFA) with batch support. This implementation relies on pure PyTorch functionality and thus avoids any extra build steps. This library is most useful when downstream image processing happens with PyTorch models. Additionally, uploading of Bayer images (instead of RGB) significantly reduces the occupied bandwidth.
 
-### Features
+## Features
  - **Methods** Currently, the following methods are provided
     - `debayer.Debayer2x2` uses 2x2 convolutions. Trades speed for color accuracy.
     - `debayer.Debayer3x3` uses 3x3 convolutions. Slower but reconstruction results comparable with `OpenCV.cvtColor`.
@@ -10,7 +10,7 @@ Provides GPU demosaicing of images captured with Bayer color filter arrays (CFA)
     - `debayer.DebayerSplit` faster than Debayer3x3 but decreased image quality.    
  - **Precision** Each method supports `float32` or `float16` precision. 
 
-### Usage
+## Usage
 Usage is straight forward
 
 ```python
@@ -26,12 +26,18 @@ with torch.no_grad():
 
 see [this example](debayer/apps/example.py) for elaborate code.
 
-### Install
+## Install
+Library, apps and development tools
+```
+pip install git+https://github.com/cheind/pytorch-debayer#egg=pytorch-debayer[full]
+```
+
+Just the library core requirements
 ```
 pip install git+https://github.com/cheind/pytorch-debayer
 ```
 
-### Layouts
+## Bayer Layouts
 Bayer filter arrays may come in different layouts. **pytorch-debayer** distinguishes these layouts by looking at the upper-left 2x2 pixel block. For example
 ```
 RGrg...
@@ -56,7 +62,7 @@ from debayer import Debayer5x5, Layout
 f = Debayer5x5(layout=Layout.BGGR).cuda()
 ```
 
-### Benchmarks
+## Benchmarks
 Performance comparison on a 5 megapixel [test image](etc/test.bmp) using a batch size of 10. 
 Timings are in milliseconds per image. See [Benchmarks.md](./Benchmarks.md) for additional details.
 
@@ -78,7 +84,7 @@ Method | Device | Elapsed [msec/image] | Mode |
 | OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 11.042 | transparent_api=True,time_upload=False |
 
 
-### Comparisons
+## Comparisons
 
 Here are some subjective image demosaicing results using the following [test image](etc/test.bmp) image. 
 <div align="center">
@@ -114,12 +120,12 @@ python -m debayer.apps.compare etc\test.bmp
 # Then select a region and check `tmp`/
 ```
 
-### Limitations
+## Limitations
 
 Currently **pytorch-debayer** requires
  - the image to have an even number of rows and columns
  - `debayer.DebayerSplit` requires a Bayer filter layout of `Layout.RGGB`, all others support varying layouts (since v1.3.0).
 
-### References
+## References
 
 Losson, Olivier, Ludovic Macaire, and Yanqin Yang. "Comparison of color demosaicing methods." Advances in Imaging and electron Physics. Vol. 162. Elsevier, 2010. 173-265.

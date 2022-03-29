@@ -3,8 +3,15 @@ from pathlib import Path
 
 THISDIR = Path(__file__).parent
 
-with open("requirements.txt") as f:
-    required = f.read().splitlines()
+
+def read_requirements(fname):
+    with open(THISDIR / "requirements" / fname, "r") as f:
+        return f.read().splitlines()
+
+
+core_required = read_requirements("core.txt")
+apps_required = read_requirements("apps.txt")
+dev_required = read_requirements("dev.txt") + apps_required
 
 main_ns = {}
 with open(THISDIR / "debayer" / "__version__.py") as ver_file:
@@ -17,8 +24,13 @@ setup(
     author="Christoph Heindl",
     url="https://github.com/cheind/pytorch-debayer/",
     license="MIT",
-    install_requires=required,
+    install_requires=core_required,
     packages=find_packages(".", include="debayer*"),
     include_package_data=True,
     keywords="debayer bayer pytorch convolution",
+    extras_require={
+        "dev": dev_required,
+        "apps": apps_required,
+        "full": core_required + dev_required,
+    },
 )
