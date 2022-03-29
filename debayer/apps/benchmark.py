@@ -188,13 +188,13 @@ def main():
         args.methods = ALL_METHODS
 
     input_image, b = utils.read_image(args.image, bayer=args.bayer, layout=args.layout)
-    b = np.asarray(Image.open(args.image).convert("L"))
 
     print(f"torch: v{torch.__version__}")
     print(f"pytorch-debayer: v{debayer.__version__}")
 
     print()
-    print("Method | Device | Elapsed [msec/image] | Mode |")
+    mpix = b.size * 1e-6
+    print(f"Method | Device | Elapsed [msec / {mpix:.1f}mpix] | Mode |")
     print("|:----:|:------:|:-------:|:----:|")
 
     bench_debayer(b, args)
