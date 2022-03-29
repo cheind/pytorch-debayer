@@ -63,13 +63,14 @@ def run_opencv(b, **kwargs):
     time_upload = kwargs.get("time_upload", False)
     transparent_api = kwargs.get("transparent_api", False)
     runs = kwargs.get("runs", 100)
+    layout = kwargs.get("layout", debayer.Layout.RGGB)
     B = kwargs.get("batch_size", 10)
 
     b = cv2.UMat(b) if (transparent_api and not time_upload) else b
 
     def run_once():
         x = cv2.UMat(b) if (transparent_api and time_upload) else b
-        y = cv2.cvtColor(x, cv2.COLOR_BAYER_BG2RGB)
+        y = cv2.cvtColor(x, utils.opencv_conversion_code(layout))
         return y
 
     run_once()

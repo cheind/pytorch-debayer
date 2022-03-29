@@ -29,8 +29,22 @@ def read_image(
         b = x[..., 0].copy()
     else:
         b = x.copy()
-        _logger.info(f"Interpreting single-channel input as Bayer {layout} image.")
+        _logger.info(
+            f"Interpreting single-channel input as Bayer {layout} image. "
+            "Use `--layout` to specify its layout."
+        )
     return x, b
+
+
+def opencv_conversion_code(layout: debayer.Layout):
+    import cv2
+
+    return {
+        layout.RGGB: cv2.COLOR_BAYER_BG2RGB,
+        layout.BGGR: cv2.COLOR_BAYER_RG2RGB,
+        layout.GBRG: cv2.COLOR_BAYER_GR2RGB,
+        layout.GRBG: cv2.COLOR_BAYER_GB2RGB,
+    }[layout]
 
 
 def create_mosaic(

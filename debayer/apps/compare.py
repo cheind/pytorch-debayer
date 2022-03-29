@@ -13,6 +13,7 @@ from . import utils
 
 @torch.no_grad()
 def main():
+    logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument("--dev", default="cuda")
     parser.add_argument("--half", action="store_true", help="Use 16bit fp precision")
@@ -50,7 +51,8 @@ def main():
     res = {
         **{
             "Original": input_image,
-            "OpenCV": cv2.cvtColor(b, cv2.COLOR_BAYER_BG2RGB) / 255.0,
+            "OpenCV": cv2.cvtColor(b, utils.opencv_conversion_code(args.layout))
+            / 255.0,
         },
         **{
             k: deb(t).squeeze().permute(1, 2, 0).to(torch.float32).cpu().numpy()
