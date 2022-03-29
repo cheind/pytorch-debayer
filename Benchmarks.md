@@ -7,7 +7,32 @@ python -m debayer.apps.benchmark etc\test.bmp --methods all
 
 ## Version 1.3.0
 
-### Machine 1 
+### Machine 1
+torch: v1.10.0+cu113
+pytorch-debayer: v1.3.0
+
+Method | Device | Elapsed [msec / 5.1mpix] | Mode |
+|:----:|:------:|:-------:|:----:|
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.633 | batch=10,time_upload=False,prec=torch.float32,torchscript=True |
+| Debayer3x3 | GeForce GTX 1080 Ti | 4.043 | batch=10,time_upload=False,prec=torch.float32,torchscript=True |
+| Debayer5x5 | GeForce GTX 1080 Ti | 6.719 | batch=10,time_upload=False,prec=torch.float32,torchscript=True |
+| DebayerSplit | GeForce GTX 1080 Ti | 2.689 | batch=10,time_upload=False,prec=torch.float32,torchscript=True |
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.631 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer3x3 | GeForce GTX 1080 Ti | 3.874 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer5x5 | GeForce GTX 1080 Ti | 6.487 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| DebayerSplit | GeForce GTX 1080 Ti | 2.697 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.575 | batch=10,time_upload=False,prec=torch.float16,torchscript=True |
+| Debayer3x3 | GeForce GTX 1080 Ti | 3.498 | batch=10,time_upload=False,prec=torch.float16,torchscript=True |
+| Debayer5x5 | GeForce GTX 1080 Ti | 4.640 | batch=10,time_upload=False,prec=torch.float16,torchscript=True |
+| DebayerSplit | GeForce GTX 1080 Ti | 1.173 | batch=10,time_upload=False,prec=torch.float16,torchscript=True |
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.574 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| Debayer3x3 | GeForce GTX 1080 Ti | 3.498 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| Debayer5x5 | GeForce GTX 1080 Ti | 4.640 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| DebayerSplit | GeForce GTX 1080 Ti | 1.173 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 2.221 | batch=10,time_upload=False,opencv-threads=4,transparent-api=False |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 2.202 | batch=10,time_upload=False,opencv-threads=4,transparent-api=True |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 1.968 | batch=10,time_upload=False,opencv-threads=12,transparent-api=False |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 1.956 | batch=10,time_upload=False,opencv-threads=12,transparent-api=True |
 
 ### Machine 2
 torch: v1.11.0+cu113
