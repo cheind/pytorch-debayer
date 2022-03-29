@@ -74,7 +74,16 @@ class Debayer3x3(torch.nn.Module):
         c = torch.nn.functional.conv2d(xpad, self.kernels, stride=1)
         c = torch.cat((c, x), 1)  # Concat with input to give identity kernel Bx5xHxW
 
-        rgb = torch.gather(c, 1, self.index.repeat(B, 1, H // 2, W // 2))
+        rgb = torch.gather(
+            c,
+            1,
+            self.index.repeat(
+                B,
+                1,
+                torch.div(H, 2, rounding_mode="floor"),
+                torch.div(W, 2, rounding_mode="floor"),
+            ),
+        )
         return rgb
 
     def _index_from_layout(self, layout: Layout) -> torch.Tensor:
@@ -307,7 +316,16 @@ class Debayer5x5(torch.nn.Module):
         planes = torch.cat(
             (planes, x), 1
         )  # Concat with input to give identity kernel Bx5xHxW
-        rgb = torch.gather(planes, 1, self.index.repeat(B, 1, H // 2, W // 2))
+        rgb = torch.gather(
+            planes,
+            1,
+            self.index.repeat(
+                B,
+                1,
+                torch.div(H, 2, rounding_mode="floor"),
+                torch.div(W, 2, rounding_mode="floor"),
+            ),
+        )
         return torch.clamp(rgb, 0, 1)
 
     def _index_from_layout(self, layout: Layout) -> torch.Tensor:
