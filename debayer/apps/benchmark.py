@@ -1,9 +1,13 @@
-import torch
-import numpy as np
+import logging
 import argparse
 import time
+
 import cpuinfo
+import numpy as np
+import torch
 from PIL import Image
+
+from . import utils
 
 try:
     import cv2
@@ -26,7 +30,7 @@ def run_pytorch(deb, t, dev, prec, **kwargs):
 
     def run_once():
         x = t.to(dev, non_blocking=True) if time_upload else t
-        rgb = deb(x)
+        rgb = deb(x)  # noqa
 
     # Warmup
     run_once()
@@ -79,13 +83,17 @@ def run_opencv(b, **kwargs):
     for _ in range(N):
         y = run_once()
     if transparent_api:
-        z = y.get()
+        z = y.get()  # noqa
     return (time.perf_counter() - start) / N * 1e3
 
 
 def fmt_line(method, devname, elapsed, **modeargs):
     modeargs.pop("batch_size", None)
     modeargs.pop("runs", None)
+    modeargs.pop("layout", None)
+    modeargs.pop("bayer", None)
+    modeargs.pop("image", None)
+    modeargs.pop("methods", None)
     mode = ",".join([f"{k}={v}" for k, v in modeargs.items()])
     return f"| {method} | {devname} | {elapsed:5.3f} | {mode} |"
 
@@ -131,23 +139,16 @@ def bench_debayer(b, args):
 
 
 def bench_opencv(b, args):
-    if not "OpenCV" in args.methods:
+    if "OpenCV" not in args.methods:
         return
     devname = cpuinfo.get_cpu_info()["brand_raw"]
-    mode = dict(
-        transparent_api=False,
-        time_upload=args.time_upload,
-        batch_size=args.batch,
-        runs=args.runs,
-    )
+    num_threads = args.opencv_threads
+    if num_threads is not None:
+        cv2.setNumThreads(num_threads)
+    mode = dict(transparent_api=False, **vars(args))
     e = run_opencv(b, **mode)
     print(fmt_line(f"OpenCV {cv2.__version__}", devname, e, **mode))
-    mode = dict(
-        transparent_api=True,
-        time_upload=args.time_upload,
-        batch_size=args.batch,
-        runs=args.runs,
-    )
+    mode = dict(transparent_api=True, **vars(args))
     e = run_opencv(b, **mode)
     print(fmt_line(f"OpenCV {cv2.__version__}", devname, e, **mode))
 
@@ -156,11 +157,15 @@ ALL_METHODS = ["Debayer2x2", "Debayer3x3", "Debayer5x5", "DebayerSplit", "OpenCV
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument("--dev", default="cuda")
     parser.add_argument("--batch", default=10, type=int)
     parser.add_argument("--time-upload", action="store_true")
     parser.add_argument("--runs", type=int, default=100, help="Number runs")
+    parser.add_argument(
+        "--opencv-threads", type=int, default=None, help="Number OpenCV threads"
+    )
     parser.add_argument(
         "--methods",
         default=["Debayer3x3", "Debayer5x5", "OpenCV"],
@@ -168,11 +173,24 @@ def main():
         help="Which methods to run. List of methods or `all`.",
         choices=ALL_METHODS + ["all"],
     )
+    parser.add_argument(
+        "--layout",
+        type=debayer.Layout,
+        choices=list(debayer.Layout),
+        default=debayer.Layout.RGGB,
+        help="Bayer layout of Bayer input image. Only applicable if --full-color is omitted",  # noqa
+    )
+    parser.add_argument(
+        "--bayer",
+        action="store_true",
+        help="If input image is multi-channel, assume encoding is Bayer",
+    )
     parser.add_argument("image")
     args = parser.parse_args()
     if "all" in args.methods:
         args.methods = ALL_METHODS
 
+    input_image, b = utils.read_image(args.image, bayer=args.bayer, layout=args.layout)
     b = np.asarray(Image.open(args.image).convert("L"))
 
     print(f"torch: v{torch.__version__}")

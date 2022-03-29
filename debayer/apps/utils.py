@@ -1,7 +1,36 @@
-import enum
-import matplotlib.pyplot as plt
+import logging
 import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 import numpy as np
+
+import debayer
+
+_logger = logging.getLogger("debayer")
+
+
+def read_image(
+    path: str, bayer: bool, layout: debayer.Layout = debayer.Layout.RGGB
+) -> tuple[np.ndarray, np.ndarray]:
+    x: np.ndarray = plt.imread(path)
+    if x.ndim > 2 and not bayer:
+        _logger.info(
+            "Loading multi-channel input as RGB image. "
+            "Use `--bayer` to force Bayer interpretation and `--layout` "
+            "to specify its layout."
+        )
+        _logger.info(f"Converting RGB to Bayer image with layout {layout}.")
+        # Consider full color, convert to bayer
+        b = debayer.utils.rgb_to_bayer(x[..., :3], layout=layout)
+    elif x.ndim > 2 and bayer:
+        _logger.info(
+            f"Loading multi-channel input as Bayer {layout} image. "
+            "Omit `--bayer` to force RGB interpretation. "
+        )
+        b = x[..., 0].copy()
+    else:
+        b = x.copy()
+        _logger.info(f"Interpreting single-channel input as Bayer {layout} image.")
+    return x, b
 
 
 def create_mosaic(

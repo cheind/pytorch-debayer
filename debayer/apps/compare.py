@@ -1,13 +1,13 @@
 import argparse
-import cv2
-import numpy as np
+import logging
 from pathlib import Path
-import torch
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 
+import cv2
 import debayer
-from debayer.utils import to_bayer
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import torch
+
 from . import utils
 
 
@@ -18,9 +18,16 @@ def main():
     parser.add_argument("--half", action="store_true", help="Use 16bit fp precision")
     parser.add_argument("--save-zoom", action="store_true", help="Save zoom regions")
     parser.add_argument(
-        "--full-color",
+        "--layout",
+        type=debayer.Layout,
+        choices=list(debayer.Layout),
+        default=debayer.Layout.RGGB,
+        help="Bayer layout of Bayer input image. Only applicable if --full-color is omitted",  # noqa
+    )
+    parser.add_argument(
+        "--bayer",
         action="store_true",
-        help="Treat the input image to be full-color. Bayer image will be derived.",
+        help="If input image is multi-channel, assume encoding is Bayer",
     )
     parser.add_argument("image")
     args = parser.parse_args()
@@ -28,31 +35,23 @@ def main():
     prec = torch.float16 if args.half else torch.float32
 
     methods = {
-        "Debayer2x2": debayer.Debayer2x2().to(args.dev).to(prec),
-        "Debayer3x3": debayer.Debayer3x3().to(args.dev).to(prec),
-        "DebayerSplit": debayer.DebayerSplit().to(args.dev).to(prec),
-        "Debayer5x5": debayer.Debayer5x5().to(args.dev).to(prec),
+        "Debayer2x2": debayer.Debayer2x2(layout=args.layout).to(args.dev).to(prec),
+        "Debayer3x3": debayer.Debayer3x3(layout=args.layout).to(args.dev).to(prec),
+        "DebayerSplit": debayer.DebayerSplit(layout=args.layout).to(args.dev).to(prec),
+        "Debayer5x5": debayer.Debayer5x5(layout=args.layout).to(args.dev).to(prec),
     }
 
     # Read Bayer image
-    input_image: np.ndarray = plt.imread(args.image)
-    if input_image.ndim > 2:
-        if args.full_color:
-            b = to_bayer(input_image[..., :3], layout=debayer.Layout.RGGB)
-        else:
-            b = input_image[..., 0]
-    else:
-        b = input_image
-
-    # Compute OpenCV result
-    rgb_opencv = cv2.cvtColor(b, cv2.COLOR_BAYER_BG2RGB) / 255.0
+    input_image, b = utils.read_image(args.image, bayer=args.bayer, layout=args.layout)
 
     # Compute debayer results
     # Prepare input with shape Bx1xHxW and
     t = (torch.from_numpy(b).to(prec).unsqueeze(0).unsqueeze(0).to(args.dev)) / 255.0
-
     res = {
-        **{"Original": input_image, "OpenCV": rgb_opencv},
+        **{
+            "Original": input_image,
+            "OpenCV": cv2.cvtColor(b, cv2.COLOR_BAYER_BG2RGB) / 255.0,
+        },
         **{
             k: deb(t).squeeze().permute(1, 2, 0).to(torch.float32).cpu().numpy()
             for k, deb in methods.items()
