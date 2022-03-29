@@ -8,10 +8,6 @@ from .layouts import Layout
 class Debayer3x3(torch.nn.Module):
     """Demosaicing of Bayer images using 3x3 convolutions.
 
-    Requires BG-Bayer color filter array layout. That is,
-    the image[1,1]='B', image[1,2]='G'. This corresponds
-    to OpenCV naming conventions.
-
     Compared to Debayer2x2 this method does not use upsampling.
     Instead, we identify five 3x3 interpolation kernels that
     are sufficient to reconstruct every color channel at every
@@ -24,9 +20,6 @@ class Debayer3x3(torch.nn.Module):
     vertically every 2 pixels. Therefore, we define the correct
     index lookups for a 2x2 grid cell and then repeat to image
     dimensions.
-
-    Note, in every 2x2 grid cell we have red, blue and two greens
-    (G1,G2). The lookups for the two greens differ.
     """
 
     def __init__(self, layout: Layout = Layout.RGGB):
@@ -175,10 +168,7 @@ class Debayer2x2(torch.nn.Module):
 
 class DebayerSplit(torch.nn.Module):
     """Demosaicing of Bayer images using 3x3 green convolution and red,blue upsampling.
-
-    Requires BG-Bayer color filter array layout. That is,
-    the image[1,1]='B', image[1,2]='G'. This corresponds
-    to OpenCV naming conventions.
+    Requires Bayer layout `Layout.RGGB`.
     """
 
     def __init__(self, layout: Layout = Layout.RGGB):
