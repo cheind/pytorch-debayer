@@ -1,10 +1,7 @@
+import debayer
 import numpy as np
-import torch
-from itertools import product
 import pytest
-
-from debayer.debayer import Debayer2x2, Debayer3x3, Debayer5x5, Layout
-from debayer.utils import to_bayer
+import torch
 
 Colors = [
     (1.0, 0.0, 0.0),
@@ -17,16 +14,18 @@ def _bayer_to_torch(x: np.ndarray, dtype=torch.float32, dev: str = "cpu"):
     return torch.tensor(x).to(dtype).unsqueeze(0).unsqueeze(0).to(dev)
 
 
-@pytest.mark.parametrize("layout", Layout)
+@pytest.mark.parametrize("layout", debayer.Layout)
 @pytest.mark.parametrize("color", Colors)
-@pytest.mark.parametrize("klass", [Debayer2x2, Debayer3x3, Debayer5x5])
+@pytest.mark.parametrize(
+    "klass", [debayer.Debayer2x2, debayer.Debayer3x3, debayer.Debayer5x5]
+)
 def test_monochromatic_images(layout, color, klass):
-    """Algorithms should be able to reconstruct ideal monochromatic bayer images without error."""
+    """Algorithms should be able to reconstruct monochromatic bayer images."""
     rgb = np.tile(
         np.array(color, dtype=np.float32).reshape(1, 1, -1),
         (6, 8, 1),
     )
-    b = _bayer_to_torch(to_bayer(rgb, layout=layout))
+    b = _bayer_to_torch(debayer.utils.rgb_to_bayer(rgb, layout=layout))
     r = klass(layout=layout)(b)
 
     # import matplotlib.pyplot as plt
