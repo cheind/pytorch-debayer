@@ -1,5 +1,4 @@
-from debayer.debayer import Debayer2x2, Debayer3x3, DebayerSplit, Debayer5x5
-from debayer.debayer import Layout
-
-# Needs to be last line
-__version__ = "1.2.0"
+from debayer.layouts import Layout  # noqa
+from debayer.modules import Debayer2x2, Debayer3x3, DebayerSplit, Debayer5x5  # noqa
+from . import utils  # noqa
+from .__version__ import __version__  # noqa

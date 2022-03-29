@@ -1,21 +1,8 @@
-import enum
-
 import torch
 import torch.nn
 import torch.nn.functional
 
-
-class Layout(enum.Enum):
-    """Possible Bayer color filter array layouts.
-
-    The value of each entry is the color index (R=0,G=1,B=2)
-    within a 2x2 Bayer block.
-    """
-
-    RGGB = (0, 1, 1, 2)
-    GRBG = (1, 0, 2, 1)
-    GBRG = (1, 2, 0, 1)
-    BGGR = (2, 1, 1, 0)
+from .layouts import Layout
 
 
 class Debayer3x3(torch.nn.Module):
@@ -252,7 +239,9 @@ class Debayer5x5(torch.nn.Module):
     less chromatic effects.
 
     ## References
-    Malvar, Henrique S., Li-wei He, and Ross Cutler. "High-quality linear interpolation for demosaicing of Bayer-patterned color images." 2004 IEEE International Conference on Acoustics, Speech, and Signal Processing. Vol. 3. IEEE, 2004.
+    Malvar, Henrique S., Li-wei He, and Ross Cutler.
+    "High-quality linear interpolation for demosaicing of Bayer-patterned
+    color images." 2004
     """
 
     def __init__(self, layout: Layout = Layout.RGGB):
@@ -264,39 +253,38 @@ class Debayer5x5(torch.nn.Module):
                 [
                     # G at R,B locations
                     # scaled by 16
-                    [ 0,  0, -2,  0,  0],
-                    [ 0,  0,  4,  0,  0],
-                    [-2,  4,  8,  4, -2],
-                    [ 0,  0,  4,  0,  0],
-                    [ 0,  0, -2,  0,  0],
+                    [ 0,  0, -2,  0,  0], # noqa
+                    [ 0,  0,  4,  0,  0], # noqa
+                    [-2,  4,  8,  4, -2], # noqa
+                    [ 0,  0,  4,  0,  0], # noqa
+                    [ 0,  0, -2,  0,  0], # noqa
 
                     # R,B at G in R rows
                     # scaled by 16
-                    [ 0,  0,  1,  0,  0],
-                    [ 0, -2,  0, -2,  0],
-                    [-2,  8, 10,  8, -2],
-                    [ 0, -2,  0, -2,  0],
-                    [ 0,  0,  1,  0,  0],
+                    [ 0,  0,  1,  0,  0], # noqa
+                    [ 0, -2,  0, -2,  0], # noqa
+                    [-2,  8, 10,  8, -2], # noqa
+                    [ 0, -2,  0, -2,  0], # noqa
+                    [ 0,  0,  1,  0,  0], # noqa
 
                     # R,B at G in B rows
                     # scaled by 16
-                    [ 0,  0, -2,  0,  0],
-                    [ 0, -2,  8, -2,  0],
-                    [ 1,  0, 10,  0,  1],
-                    [ 0, -2,  8, -2,  0],
-                    [ 0,  0, -2,  0,  0],
+                    [ 0,  0, -2,  0,  0], # noqa
+                    [ 0, -2,  8, -2,  0], # noqa
+                    [ 1,  0, 10,  0,  1], # noqa
+                    [ 0, -2,  8, -2,  0], # noqa
+                    [ 0,  0, -2,  0,  0], # noqa
 
                     # R at B and B at R
                     # scaled by 16
-                    [ 0,  0, -3,  0,  0],
-                    [ 0,  4,  0,  4,  0],
-                    [-3,  0, 12,  0, -3],
-                    [ 0,  4,  0,  4,  0],
-                    [ 0,  0, -3,  0,  0],
+                    [ 0,  0, -3,  0,  0], # noqa
+                    [ 0,  4,  0,  4,  0], # noqa
+                    [-3,  0, 12,  0, -3], # noqa
+                    [ 0,  4,  0,  4,  0], # noqa
+                    [ 0,  0, -3,  0,  0], # noqa
 
                     # R at R, B at B, G at G
                     # identity kernel not shown
-                    
                 ]
             ).view(4, 1, 5, 5).float() / 16.0,
             requires_grad=False,
