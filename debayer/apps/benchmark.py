@@ -20,10 +20,11 @@ except ImportError:
 import debayer
 
 
-def run_pytorch(deb, t, dev, prec, **kwargs):
+def run_pytorch(deb, t, dev, kwargs: dict):
     time_upload = kwargs.get("time_upload", False)
-    B = kwargs.get("batch_size", 10)
+    B = kwargs.get("batch", 10)
     runs = kwargs.get("runs", 100)
+    prec = kwargs.get("prec", torch.float32)
 
     t = t.repeat(B, 1, 1, 1).to(prec).contiguous()
     t = t.pin_memory() if time_upload else t.to(dev)
@@ -95,6 +96,7 @@ def fmt_line(method, devname, elapsed, **modeargs):
     modeargs.pop("bayer", None)
     modeargs.pop("image", None)
     modeargs.pop("methods", None)
+    modeargs.pop("dev", None)
     mode = ",".join([f"{k}={v}" for k, v in modeargs.items()])
     return f"| {method} | {devname} | {elapsed:5.3f} | {mode} |"
 
@@ -105,35 +107,30 @@ def bench_debayer(b, args):
         devname = torch.cuda.get_device_name(args.dev)
     else:
         devname = cpuinfo.get_cpu_info()["brand_raw"]
-    mode = dict(time_upload=args.time_upload, batch_size=args.batch, runs=args.runs)
+    mode = vars(args)
 
     def run_all(dev, mode):
         t = (torch.tensor(b).clone().unsqueeze(0).unsqueeze(0)) / 255.0
         prec = mode["prec"]
+        mods = {
+            "Debayer2x2": debayer.Debayer2x2(layout=mode["layout"]).to(prec).to(dev),
+            "Debayer3x3": debayer.Debayer3x3(layout=mode["layout"]).to(prec).to(dev),
+            "Debayer5x5": debayer.Debayer5x5(layout=mode["layout"]).to(prec).to(dev),
+            "DebayerSplit": debayer.DebayerSplit(layout=mode["layout"])
+            .to(prec)
+            .to(dev),
+        }
+        if mode["torchscript"]:
+            mods = {
+                k: torch.jit.script(
+                    torch.jit.trace(v, torch.rand(1, 1, 128, 128).to(dev).to(prec))
+                )
+                for k, v in mods.items()
+            }
 
-        if "Debayer2x2" in args.methods:
-            deb = debayer.Debayer2x2().to(dev).to(prec)
-            debname = deb.__class__.__name__
-            e = run_pytorch(deb, t, dev, **mode)
-            print(fmt_line(debname, devname, e, **mode))
-
-        if "Debayer3x3" in args.methods:
-            deb = debayer.Debayer3x3().to(dev).to(prec)
-            debname = deb.__class__.__name__
-            e = run_pytorch(deb, t, dev, **mode)
-            print(fmt_line(debname, devname, e, **mode))
-
-        if "Debayer5x5" in args.methods:
-            deb = debayer.Debayer5x5().to(dev).to(prec)
-            debname = deb.__class__.__name__
-            e = run_pytorch(deb, t, dev, **mode)
-            print(fmt_line(debname, devname, e, **mode))
-
-        if "DebayerSplit" in args.methods:
-            deb = debayer.DebayerSplit().to(dev).to(prec)
-            debname = deb.__class__.__name__
-            e = run_pytorch(deb, t, dev, **mode)
-            print(fmt_line(debname, devname, e, **mode))
+        for name, mod in mods.items():
+            e = run_pytorch(mod, t, dev, mode)
+            print(fmt_line(name, devname, e, **mode))
 
     run_all(args.dev, mode={**{"prec": torch.float32}, **mode})
     run_all(args.dev, mode={**{"prec": torch.float16}, **mode})
@@ -185,6 +182,11 @@ def main():
         "--bayer",
         action="store_true",
         help="If input image is multi-channel, assume encoding is Bayer",
+    )
+    parser.add_argument(
+        "--torchscript",
+        action="store_true",
+        help="Use torch script",
     )
     parser.add_argument("image")
     args = parser.parse_args()
