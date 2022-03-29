@@ -2,6 +2,7 @@ import logging
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
 
 import debayer
 
@@ -9,29 +10,35 @@ _logger = logging.getLogger("debayer")
 
 
 def read_image(
-    path: str, bayer: bool, layout: debayer.Layout = debayer.Layout.RGGB
+    path: str,
+    bayer: bool,
+    layout: debayer.Layout = debayer.Layout.RGGB,
+    loglevel: int = logging.INFO,
 ) -> tuple[np.ndarray, np.ndarray]:
-    x: np.ndarray = plt.imread(path)
+    x: np.ndarray = np.asarray(Image.open(path))
     if x.ndim > 2 and not bayer:
-        _logger.info(
+        _logger.log(
+            loglevel,
             "Loading multi-channel input as RGB image. "
             "Use `--bayer` to force Bayer interpretation and `--layout` "
-            "to specify its layout."
+            "to specify its layout.",
         )
-        _logger.info(f"Converting RGB to Bayer image with layout {layout}.")
+        _logger.log(loglevel, f"Converting RGB to Bayer image with layout {layout}.")
         # Consider full color, convert to bayer
         b = debayer.utils.rgb_to_bayer(x[..., :3], layout=layout)
     elif x.ndim > 2 and bayer:
-        _logger.info(
+        _logger.log(
+            loglevel,
             f"Loading multi-channel input as Bayer {layout} image. "
-            "Omit `--bayer` to force RGB interpretation. "
+            "Omit `--bayer` to force RGB interpretation. ",
         )
         b = x[..., 0].copy()
     else:
         b = x.copy()
-        _logger.info(
+        _logger.log(
+            loglevel,
             f"Interpreting single-channel input as Bayer {layout} image. "
-            "Use `--layout` to specify its layout."
+            "Use `--layout` to specify its layout.",
         )
     return x, b
 
