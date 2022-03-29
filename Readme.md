@@ -19,7 +19,7 @@ from debayer import Debayer5x5
 
 f = Debayer5x5().cuda()
 
-bayer = ...         # a Bx1xHxW, [0..1], torch.float32 BG-Bayer tensor
+bayer = ...         # a Bx1xHxW, [0..1], torch.float32 RGGB-Bayer tensor
 with torch.no_grad():
     rgb = f(bayer)  # a Bx3xHxW, torch.float32 tensor of RGB images
 ```
@@ -29,6 +29,31 @@ see [this example](debayer/apps/example.py) for elaborate code.
 ### Install
 ```
 pip install git+https://github.com/cheind/pytorch-debayer
+```
+
+### Layouts
+Bayer filter arrays may come in different layouts. **pytorch-debayer** distinguishes these layouts by looking at the upper-left 2x2 pixel block. For example
+```
+RGrg...
+GBgb...
+rgrg...
+```
+defines the `Layout.RGGB` which is also the default. In total four layouts are supported
+```python
+from debayer import Layout
+
+Layout.RGGB
+Layout.GRBG
+Layout.GBRG
+Layout.BGGR
+```
+
+and you can set the layout as follows
+
+```python
+from debayer import Debayer5x5, Layout
+
+f = Debayer5x5(layout=Layout.BGGR).cuda()
 ```
 
 ### Benchmarks
@@ -51,6 +76,7 @@ Method | Device | Elapsed [msec/image] | Mode |
 | Debayer5x5 | NVIDIA GeForce RTX 3090 | 1.687 | prec=torch.float16,time_upload=False |
 | OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 2.097 | transparent_api=False,time_upload=False |
 | OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 11.042 | transparent_api=True,time_upload=False |
+
 
 ### Comparisons
 
@@ -91,11 +117,9 @@ python -m debayer.apps.compare etc\test.bmp
 ### Limitations
 
 Currently **pytorch-debayer** requires
- - BG-Bayer color filter array layout. According to OpenCV naming conventions (see [here](https://docs.opencv.org/4.2.0/de/d25/imgproc_color_conversions.html) towards end of file) that means your Bayer input image must be arranged in the following way
- ```
-RGRGRG...
-GBGBGB...
-RGRGRG...
-.........
-```
- - the number of image rows and columns to be even.
+ - the image to have an even number of rows and columns
+ - `debayer.DebayerSplit` requires a Bayer filter layout of `Layout.RGGB`, all others support varying layouts (since v1.3.0).
+
+### References
+
+Losson, Olivier, Ludovic Macaire, and Yanqin Yang. "Comparison of color demosaicing methods." Advances in Imaging and electron Physics. Vol. 162. Elsevier, 2010. 173-265.
