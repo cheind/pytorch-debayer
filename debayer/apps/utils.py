@@ -1,4 +1,5 @@
 import logging
+from typing import Tuple, List
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,7 +15,7 @@ def read_image(
     bayer: bool,
     layout: debayer.Layout = debayer.Layout.RGGB,
     loglevel: int = logging.INFO,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray]:
     x: np.ndarray = np.asarray(Image.open(path))
     if x.ndim > 2 and not bayer:
         _logger.log(
@@ -55,7 +56,7 @@ def opencv_conversion_code(layout: debayer.Layout):
 
 
 def create_mosaic(
-    imgs: list[np.ndarray], roi: tuple[int, int, int, int], labels: list[str]
+    imgs: List[np.ndarray], roi: Tuple[int, int, int, int], labels: List[str]
 ):
     width = roi[1] - roi[0]
     height = roi[3] - roi[2]
