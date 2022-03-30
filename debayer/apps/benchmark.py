@@ -1,12 +1,9 @@
 import logging
 import argparse
-from math import prod
 import time
 
 import cpuinfo
-import numpy as np
 import torch
-from PIL import Image
 from itertools import product
 
 from . import utils
