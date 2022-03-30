@@ -25,8 +25,8 @@ def peak_signal_noise_ratio(
     B, C = x.shape[:2]
     assert y.shape[:2] == x.shape[:2]
 
-    x = x.view(B, C, -1)
-    y = y.view(B, C, -1)
+    x = x.reshape(B, C, -1)
+    y = y.reshape(B, C, -1)
 
     mse = ((x - y) ** 2).mean(-1)  # (B,C)
     # Sanity to return SNR values where there is no error
