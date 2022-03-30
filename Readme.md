@@ -9,7 +9,7 @@ Provides GPU demosaicing of images captured with Bayer color filter arrays (CFA)
     - `debayer.Debayer2x2` uses 2x2 convolutions. Trades speed for color accuracy.
     - `debayer.Debayer3x3` uses 3x3 convolutions. Slower but reconstruction results comparable with `OpenCV.cvtColor`.
     - `debayer.Debayer5x5` uses 5x5 convolutions based on Malver-He-Cutler algorithm. Slower but sharper than `OpenCV.cvtColor`. Should be your default.
-    - `debayer.DebayerSplit` faster than Debayer3x3 but decreased image quality.    
+    - `debayer.DebayerSplit` faster than `debayer.Debayer3x3` but decreased image quality.    
  - **Precision** Each method supports `float32` or `float16` precision. 
 
 ## Usage
