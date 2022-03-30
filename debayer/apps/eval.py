@@ -124,10 +124,10 @@ def main():
                     "Path": path,
                     "Database": args.path.name,
                     "Method": method,
-                    "R": psnr[0].item(),
-                    "G": psnr[1].item(),
-                    "B": psnr[2].item(),
-                    "PSNR": psnr.mean().item(),
+                    "R (dB)": psnr[0].item(),
+                    "G (dB)": psnr[1].item(),
+                    "B (dB)": psnr[2].item(),
+                    "PSNR (dB)": psnr.mean().item(),
                     "Equal": eqmask.any().item(),
                 }
             )
@@ -137,7 +137,7 @@ def main():
     print()
     print(
         df.groupby([df.Database, df.Method])[
-            ["Database", "Method", "R", "G", "B", "PSNR"]
+            ["Database", "Method", "R (dB)", "G (dB)", "B (dB)", "PSNR (dB)"]
         ]
         .mean()
         .reset_index()

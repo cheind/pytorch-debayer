@@ -16,7 +16,10 @@ Note, in case the latest version below does not match the current version of pyt
 
 ## Version 1.4.0
 
-| Database   | Method       |     R |     G |     B |   PSNR |
+### PSNR
+The PSNR values (dB) of each channel (R, G, B) and PSNR of the whole image (RGB) across 2 Datasets (Kodak, McMaster) and for each algorithm.
+
+| Database   | Method       |     R (dB) |     G (dB) |     B (dB) |   PSNR (dB) |
 |------------|--------------|-------|-------|-------|--------|
 | Kodak      | Debayer2x2   | 26.64 | 28.18 | 26.98 |  27.27 |
 |       | Debayer3x3   | 28.18 | 32.66 | 28.86 |  29.90 |
