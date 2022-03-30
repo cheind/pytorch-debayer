@@ -65,9 +65,9 @@ f = Debayer5x5(layout=Layout.BGGR).cuda()
 ## Evaluation
 
 ### PSNR values
-The PSNR values (dB) of each channel (R, G, B) and PSNR of the whole image (RGB) across 2 Datasets (Kodak, McMaster) and for each algorithm. See [Metrics.md](./Metrics.md) for additional details.
+The PSNR (Peak-Signal-Noise-Ratio) values (dB, higher is better) for each channel (R, G, B) and PSNR of the whole image (RGB) across 2 Datasets (Kodak, McMaster) and for each algorithm. See [Metrics.md](./Metrics.md) for additional details.
 
-| Database   | Method       |     R |     G |     B |   PSNR |
+| Database   | Method       |     R (dB)|     G (dB)|     B (dB)|   PSNR (dB)|
 |------------|--------------|-------|-------|-------|--------|
 | Kodak      | Debayer2x2   | 26.64 | 28.18 | 26.98 |  27.27 |
 |       | Debayer3x3   | 28.18 | 32.66 | 28.86 |  29.90 |

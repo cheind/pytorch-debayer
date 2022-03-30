@@ -17,7 +17,7 @@ Note, in case the latest version below does not match the current version of pyt
 ## Version 1.4.0
 
 ### PSNR
-The PSNR values (dB) of each channel (R, G, B) and PSNR of the whole image (RGB) across 2 Datasets (Kodak, McMaster) and for each algorithm.
+The PSNR (Peak-Signal-Noise-Ratio) values (dB, higher is better) of each channel (R, G, B) and PSNR of the whole image (RGB) across 2 Datasets (Kodak, McMaster) and for each algorithm.
 
 | Database   | Method       |     R (dB) |     G (dB) |     B (dB) |   PSNR (dB) |
 |------------|--------------|-------|-------|-------|--------|
