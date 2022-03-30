@@ -1,0 +1,15 @@
+language: python
+python:
+- 3.9
+- 3.10
+cache:
+  pip: true
+install:
+- pip install .[full]
+script:
+- pytest
+notifications:
+  email:
+    if: branch = main
+    on_success: never
+    on_failure: always
