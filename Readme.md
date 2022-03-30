@@ -145,6 +145,9 @@ Currently **pytorch-debayer** requires
  - the image to have an even number of rows and columns
  - `debayer.DebayerSplit` requires a Bayer filter layout of `Layout.RGGB`, all others support varying layouts (since v1.3.0).
 
-## References
+## References 
+The following reference are mostly for comparison metrics and not algorithms. See the individual module documentation for algorithmic references.
 
-Losson, Olivier, Ludovic Macaire, and Yanqin Yang. "Comparison of color demosaicing methods." Advances in Imaging and electron Physics. Vol. 162. Elsevier, 2010. 173-265.
+- Wang, Shuyu, et al. "A Compact High-Quality Image Demosaicking Neural Network for Edge-Computing Devices." Sensors 21.9 (2021): 3265.
+
+- Losson, Olivier, Ludovic Macaire, and Yanqin Yang. "Comparison of color demosaicing methods." Advances in Imaging and electron Physics. Vol. 162. Elsevier, 2010. 173-265.
