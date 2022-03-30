@@ -30,3 +30,8 @@ def test_psnr():
         torch.tensor([10.0]).view(1, 1, 1), torch.tensor([8.0]).view(1, 1, 1), 10.0
     )
     assert torch.isclose(psnr, torch.tensor(20 - 10 * math.log10(4)))
+    # Assert values are correct (normalized)
+    psnr, _ = peak_signal_noise_ratio(
+        torch.tensor([1.0]).view(1, 1, 1), torch.tensor([8.0 / 10.0]).view(1, 1, 1), 1.0
+    )
+    assert torch.isclose(psnr, torch.tensor(20 - 10 * math.log10(4)))
