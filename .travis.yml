@@ -1,8 +1,8 @@
 language: python
 dist: focal
 python:
-- 3.9
-- 3.10
+- '3.9'
+- '3.10'
 cache:
   pip: true
 install:
