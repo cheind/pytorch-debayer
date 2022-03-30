@@ -7,13 +7,11 @@ The images are assumed to be multi-channel RGB images.
 import argparse
 import logging
 from collections.abc import Callable
-from multiprocessing.sharedctypes import Value
 from pathlib import Path
-import numpy as np
-import cv2
 
+import cv2
 import debayer
-import matplotlib.pyplot as plt
+import numpy as np
 import torch
 
 from . import utils
@@ -40,11 +38,10 @@ def glob_image_paths(path: Path):
 
 
 def run_opencv(bayer: torch.tensor):
-    # assume 8-bit depth here
     bayer = bayer.squeeze().cpu().to(torch.float32).numpy() * 255.0
     bayer = bayer.astype(np.uint8)
     rgb = cv2.cvtColor(bayer, cv2.COLOR_BAYER_BG2RGB)
-    return torch.tensor(rgb).permute(2, 1, 0).to(torch.float32) / 255.0
+    return torch.tensor(rgb).permute(2, 0, 1).to(torch.float32) / 255.0
 
 
 def reconstruct(
@@ -52,27 +49,33 @@ def reconstruct(
     methods: dict[str, Callable[[torch.Tensor], torch.Tensor]],
     dev: torch.device,
     prec: torch.dtype,
-) -> tuple[np.ndarray, np.ndarray, int]:
-    """Reconstruct image given by path using given methods.
-    Returned images are fp32 in range [0..peak], where peak
-    is the maximum positive representable value given the image
-    bit depth.
-    """
+) -> tuple[torch.FloatTensor, torch.BoolTensor]:
+    """Reconstruct image given by path using given methods and return PSNR values."""
 
     orig, bayer = utils.read_image(
         path, bayer=False, layout=LAYOUT, loglevel=logging.DEBUG
     )
-    peak = (1 << orig.dtype.itemsize * 8) - 1
+    bpp = orig.dtype.itemsize * 8
+    max_intensity = (2 ** bpp) - 1
 
     if orig.ndim != 3 or orig.shape[2] != 3:
         raise ValueError(f"Expected RGB image {path}")
 
-    bayer = (torch.tensor(bayer).to(prec).unsqueeze(0).unsqueeze(0).to(dev)) / peak
-    recs = [
-        m(bayer).squeeze().permute(1, 2, 0).cpu().to(torch.float32).numpy() * peak
-        for m in methods.values()
-    ]
-    return orig.astype(np.float32), recs, peak
+    # Reconstruct from Bayer
+    bayer = (
+        torch.tensor(bayer).to(prec).unsqueeze(0).unsqueeze(0).to(dev)
+    ) / max_intensity
+    recs = [m(bayer).squeeze().cpu().to(torch.float32) for m in methods.values()]
+    recs = torch.stack(recs, 0)  # (B,C,H,W)
+
+    # Original image
+    orig = torch.tensor(orig).permute(2, 0, 1).to(torch.float32) / max_intensity
+    orig = orig.unsqueeze(0).repeat(recs.shape[0], 1, 1, 1)
+
+    # Compare
+    psnr, eq_mask = debayer.metrics.peak_signal_noise_ratio(orig, recs, datarange=1.0)
+
+    return psnr, eq_mask
 
 
 @torch.no_grad()
@@ -99,6 +102,8 @@ def main():
 
     # Setup precision and algorithms
     prec = torch.float16 if args.half else torch.float32
+    if "all" in args.methods:
+        args.methods = ALL_METHODS
     methods = {
         "Debayer2x2": debayer.Debayer2x2(layout=LAYOUT).to(args.dev).to(prec),
         "Debayer3x3": debayer.Debayer3x3(layout=LAYOUT).to(args.dev).to(prec),
@@ -107,11 +112,37 @@ def main():
         "OpenCV": run_opencv,
     }
     methods = {k: v for k, v in methods.items() if k in args.methods}
+    _logger.info(f"Enabled methods {list(methods.keys())}")
 
+    results = []
     for path in image_paths:
         _logger.info(f"Processing {path}")
-        orig, rec, peak = reconstruct(path, methods, args.dev, prec)
-        print(peak)
+        psnrs, eqmasks = reconstruct(path, methods, args.dev, prec)
+        for method, psnr, eqmask in zip(methods.keys(), psnrs, eqmasks):
+            results.append(
+                {
+                    "Path": path,
+                    "Database": args.path.name,
+                    "Method": method,
+                    "R": psnr[0].item(),
+                    "G": psnr[1].item(),
+                    "B": psnr[2].item(),
+                    "PSNR": psnr.mean().item(),
+                    "Equal": eqmask.any().item(),
+                }
+            )
+    import pandas as pd
+
+    df = pd.DataFrame(results)
+    print()
+    print(
+        df.groupby([df.Database, df.Method])[
+            ["Database", "Method", "R", "G", "B", "PSNR"]
+        ]
+        .mean()
+        .reset_index()
+        .to_markdown(headers="keys", index=False, floatfmt=".2f", tablefmt="github")
+    )
 
 
 if __name__ == "__main__":
