@@ -103,7 +103,7 @@ Method | Device | Elapsed [msec/5.1mpix] | Mode |
 | OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 11.042 | transparent_api=True,time_upload=False |
 
 
-## Comparisons
+### Subjective Results
 
 Here are some subjective image demosaicing results using the following [test image](etc/test.bmp) image. 
 <div align="center">
