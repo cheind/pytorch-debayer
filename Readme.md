@@ -62,11 +62,30 @@ from debayer import Debayer5x5, Layout
 f = Debayer5x5(layout=Layout.BGGR).cuda()
 ```
 
-## Benchmarks
-Performance comparison on a 5 megapixel [test image](etc/test.bmp) using a batch size of 10. 
-Timings are in milliseconds per image. See [Benchmarks.md](./Benchmarks.md) for additional details.
+## Evaluation
 
-Method | Device | Elapsed [msec/image] | Mode |
+### PSNR values
+The PSNR values (dB) of each channel (R, G, B) and PSNR of the whole image (RGB) across 2 Datasets (Kodak, McMaster) and for each algorithm. See [Metrics.md](./Metrics.md) for additional details.
+
+| Database   | Method       |     R |     G |     B |   PSNR |
+|------------|--------------|-------|-------|-------|--------|
+| Kodak      | Debayer2x2   | 26.64 | 28.18 | 26.98 |  27.27 |
+|       | Debayer3x3   | 28.18 | 32.66 | 28.86 |  29.90 |
+|       | Debayer5x5   | 33.84 | 38.05 | 33.53 |  35.14 |
+|       | DebayerSplit | 26.64 | 32.66 | 26.98 |  28.76 |
+|       | OpenCV       | 28.15 | 31.25 | 28.62 |  29.34 |
+| McMaster   | Debayer2x2   | 28.47 | 30.32 | 28.63 |  29.14 |
+|    | Debayer3x3   | 31.68 | 35.40 | 31.25 |  32.78 |
+|    | Debayer5x5   | 34.04 | 37.62 | 33.02 |  34.89 |
+|    | DebayerSplit | 28.47 | 35.40 | 28.63 |  30.83 |
+|    | OpenCV       | 31.64 | 35.22 | 31.22 |  32.69 |
+
+
+### Runtimes
+Performance comparison on a 5 megapixel [test image](etc/test.bmp) using a batch size of 10. 
+Timings are in milliseconds per given megapixels. See [Benchmarks.md](./Benchmarks.md) for additional details.
+
+Method | Device | Elapsed [msec/5.1mpix] | Mode |
 |:----:|:------:|:-------:|:----:|
 | Debayer2x2 | GeForce GTX 1080 Ti | 0.653 | prec=torch.float32,time_upload=False |
 | Debayer3x3 | GeForce GTX 1080 Ti | 3.056 | prec=torch.float32,time_upload=False |

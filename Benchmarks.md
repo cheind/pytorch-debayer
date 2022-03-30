@@ -2,8 +2,9 @@
 
 Performance comparison on a 5 megapixel [test image](etc/test.bmp). Command is
 ```
-python -m debayer.apps.benchmark etc\test.bmp --methods all
+python -m debayer.apps.benchmark etc/test.bmp --methods all
 ```
+Note, in case the latest version below does not match the current version of pytorch-debayer, performance statistics to remain unchanged.
 
 ## Version 1.3.0
 
