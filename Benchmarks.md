@@ -6,6 +6,34 @@ python -m debayer.apps.benchmark etc/test.bmp --methods all
 ```
 Note, in case the latest version below does not match the current version of pytorch-debayer, performance statistics to remain unchanged.
 
+## Version 1.4.1
+torch: v1.10.0+cu113
+pytorch-debayer: v1.4.1
+
+Method | Device | Elapsed [msec / 5.1mpix] | Mode |
+|:----:|:------:|:-------:|:----:|
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.619 | batch=10,time_upload=False,prec=torch.float32,torchscript=True |
+| Debayer3x3 | GeForce GTX 1080 Ti | 3.296 | batch=10,time_upload=False,prec=torch.float32,torchscript=True |
+| Debayer5x5 | GeForce GTX 1080 Ti | 5.837 | batch=10,time_upload=False,prec=torch.float32,torchscript=True |
+| DebayerSplit | GeForce GTX 1080 Ti | 2.631 | batch=10,time_upload=False,prec=torch.float32,torchscript=True |
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.617 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer3x3 | GeForce GTX 1080 Ti | 3.298 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer5x5 | GeForce GTX 1080 Ti | 5.842 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| DebayerSplit | GeForce GTX 1080 Ti | 2.632 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.561 | batch=10,time_upload=False,prec=torch.float16,torchscript=True |
+| Debayer3x3 | GeForce GTX 1080 Ti | 2.919 | batch=10,time_upload=False,prec=torch.float16,torchscript=True |
+| Debayer5x5 | GeForce GTX 1080 Ti | 4.045 | batch=10,time_upload=False,prec=torch.float16,torchscript=True |
+| DebayerSplit | GeForce GTX 1080 Ti | 1.151 | batch=10,time_upload=False,prec=torch.float16,torchscript=True |
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.563 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| Debayer3x3 | GeForce GTX 1080 Ti | 2.927 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| Debayer5x5 | GeForce GTX 1080 Ti | 4.044 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| DebayerSplit | GeForce GTX 1080 Ti | 1.151 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 2.205 | batch=10,time_upload=False,opencv-threads=4,transparent-api=False |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 2.206 | batch=10,time_upload=False,opencv-threads=4,transparent-api=True |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 1.937 | batch=10,time_upload=False,opencv-threads=12,transparent-api=False |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 1.925 | batch=10,time_upload=False,opencv-threads=12,transparent-api=True |
+
+
 ## Version 1.3.0
 
 ### Machine 1
