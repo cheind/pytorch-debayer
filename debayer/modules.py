@@ -365,3 +365,38 @@ class Debayer5x5(torch.nn.Module):
             Layout.GBRG: torch.roll(rggb, 1, -2),
             Layout.BGGR: torch.roll(rggb, (1, 1), (-1, -2)),
         }.get(layout)
+
+
+class DebayerFuse(torch.nn.Module):
+    def __init__(self, layout: Layout = Layout.RGGB, weights: torch.Tensor = None):
+        super(DebayerFuse, self).__init__()
+        self.layout = layout
+        self.filters = torch.nn.ModuleList(
+            [
+                Debayer3x3(layout=layout),
+                Debayer2x2(layout=layout),
+                Debayer5x5(layout=layout),
+            ]
+        )
+        if weights is None:
+            weights = torch.ones(len(self.filters)) / len(self.filters)
+        self.weights = torch.nn.Parameter(
+            weights.view(-1, 1, 1, 1, 1),
+            requires_grad=False,
+        )
+
+    def forward(self, x):
+        """Debayer image.
+
+        Parameters
+        ----------
+        x : Bx1xHxW tensor
+            Images to debayer
+
+        Returns
+        -------
+        rgb : Bx3xHxW tensor
+            Color images in RGB channel order.
+        """
+        results = torch.stack([f(x) for f in self.filters], 0)  # (F,B,C,H,W)
+        return (results * self.weights).sum(0) / self.weights.sum()

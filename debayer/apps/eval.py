@@ -109,6 +109,7 @@ def main():
         "Debayer3x3": debayer.Debayer3x3(layout=LAYOUT).to(args.dev).to(prec),
         "DebayerSplit": debayer.DebayerSplit(layout=LAYOUT).to(args.dev).to(prec),
         "Debayer5x5": debayer.Debayer5x5(layout=LAYOUT).to(args.dev).to(prec),
+        "DebayerFuse": debayer.DebayerFuse(layout=LAYOUT).to(args.dev).to(prec),
         "OpenCV": run_opencv,
     }
     methods = {k: v for k, v in methods.items() if k in args.methods}

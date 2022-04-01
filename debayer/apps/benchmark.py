@@ -121,6 +121,7 @@ def bench_debayer(b, args):
             "DebayerSplit": debayer.DebayerSplit(layout=mode["layout"])
             .to(prec)
             .to(dev),
+            "DebayerFuse": debayer.DebayerFuse(layout=mode["layout"]).to(prec).to(dev),
         }
         mods = {k: v for k, v in mods.items() if k in args.methods}
         if mode["torchscript"]:
@@ -150,7 +151,14 @@ def bench_opencv(b, args):
         print(fmt_line(f"OpenCV {cv2.__version__}", devname, e, **mode))
 
 
-ALL_METHODS = ["Debayer2x2", "Debayer3x3", "Debayer5x5", "DebayerSplit", "OpenCV"]
+ALL_METHODS = [
+    "Debayer2x2",
+    "Debayer3x3",
+    "Debayer5x5",
+    "DebayerSplit",
+    "DebayerFuse",
+    "OpenCV",
+]
 
 
 def main():
