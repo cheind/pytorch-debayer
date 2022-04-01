@@ -78,11 +78,13 @@ class Debayer3x3(torch.nn.Module):
             c,
             1,
             self.index.repeat(
-                B,
+                1,
                 1,
                 torch.div(H, 2, rounding_mode="floor"),
                 torch.div(W, 2, rounding_mode="floor"),
-            ),
+            ).expand(
+                B, -1, -1, -1
+            ),  # expand in batch is faster than repeat
         )
         return rgb
 
@@ -320,11 +322,13 @@ class Debayer5x5(torch.nn.Module):
             planes,
             1,
             self.index.repeat(
-                B,
+                1,
                 1,
                 torch.div(H, 2, rounding_mode="floor"),
                 torch.div(W, 2, rounding_mode="floor"),
-            ),
+            ).expand(
+                B, -1, -1, -1
+            ),  # expand for singleton batch dimension is faster
         )
         return torch.clamp(rgb, 0, 1)
 
