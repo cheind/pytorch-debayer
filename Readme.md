@@ -1,4 +1,4 @@
-[![Build Status](https://app.travis-ci.com/cheind/pytorch-debayer.svg?branch=master)](https://app.travis-ci.com/cheind/pytorch-debayer)
+[![Build Status](https://github.com/cheind/pytorch-debayer/actions/workflows/python-package.yml/badge.svg)](https://github.com/cheind/pytorch-debayer/actions/workflows/python-package.yml)
 
 # pytorch-debayer
 
