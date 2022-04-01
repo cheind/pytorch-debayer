@@ -89,20 +89,22 @@ Timings are in milliseconds per given megapixels. See [Benchmarks.md](./Benchmar
 
 Method | Device | Elapsed [msec/5.1mpix] | Mode |
 |:----:|:------:|:-------:|:----:|
-| Debayer2x2 | GeForce GTX 1080 Ti | 0.653 | prec=torch.float32,time_upload=False |
-| Debayer3x3 | GeForce GTX 1080 Ti | 3.056 | prec=torch.float32,time_upload=False |
-| Debayer5x5 | GeForce GTX 1080 Ti | 6.343 | prec=torch.float32,time_upload=False |
-| Debayer2x2 | GeForce GTX 1080 Ti | 0.562 | prec=torch.float16,time_upload=False |
-| Debayer3x3 | GeForce GTX 1080 Ti | 2.812 | prec=torch.float16,time_upload=False |
-| Debayer5x5 | GeForce GTX 1080 Ti | 4.545 | prec=torch.float16,time_upload=False |
-| Debayer2x2 | NVIDIA GeForce RTX 3090 | 0.232 | prec=torch.float32,time_upload=False |
-| Debayer3x3 | NVIDIA GeForce RTX 3090 | 1.173 | prec=torch.float32,time_upload=False |
-| Debayer5x5 | NVIDIA GeForce RTX 3090 | 1.723 | prec=torch.float32,time_upload=False |
-| Debayer2x2 | NVIDIA GeForce RTX 3090 | 0.173 | prec=torch.float16,time_upload=False |
-| Debayer3x3 | NVIDIA GeForce RTX 3090 | 1.067 | prec=torch.float16,time_upload=False |
-| Debayer5x5 | NVIDIA GeForce RTX 3090 | 1.687 | prec=torch.float16,time_upload=False |
-| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 2.097 | transparent_api=False,time_upload=False |
-| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 11.042 | transparent_api=True,time_upload=False |
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.617 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer3x3 | GeForce GTX 1080 Ti | 3.298 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer5x5 | GeForce GTX 1080 Ti | 5.842 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer2x2 | GeForce GTX 1080 Ti | 0.563 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| Debayer3x3 | GeForce GTX 1080 Ti | 2.927 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| Debayer5x5 | GeForce GTX 1080 Ti | 4.044 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| Debayer2x2 | NVIDIA GeForce RTX 3090 | 0.231 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer3x3 | NVIDIA GeForce RTX 3090 | 1.052 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer5x5 | NVIDIA GeForce RTX 3090 | 1.610 | batch=10,time_upload=False,prec=torch.float32,torchscript=False |
+| Debayer2x2 | NVIDIA GeForce RTX 3090 | 0.174 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| Debayer3x3 | NVIDIA GeForce RTX 3090 | 0.854 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| Debayer5x5 | NVIDIA GeForce RTX 3090 | 1.589 | batch=10,time_upload=False,prec=torch.float16,torchscript=False |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 2.205 | batch=10,time_upload=False,opencv-threads=4,transparent-api=False |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 2.206 | batch=10,time_upload=False,opencv-threads=4,transparent-api=True |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 1.937 | batch=10,time_upload=False,opencv-threads=12,transparent-api=False |
+| OpenCV 4.5.3 | Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz | 1.925 | batch=10,time_upload=False,opencv-threads=12,transparent-api=True |
 
 
 ### Subjective Results
